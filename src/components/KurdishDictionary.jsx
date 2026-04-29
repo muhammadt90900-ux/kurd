@@ -1,4 +1,4 @@
-[4/29/2026 6:19 PM] خۆم: import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function KurdishDictionary() {
   const [query, setQuery] = useState("");
@@ -32,7 +32,7 @@ export default function KurdishDictionary() {
       const langPair = sourceLang === "ku" ? "ckb|en" : "en|ckb";
       const direction = sourceLang === "ku" ? "ku-en" : "en-ku";
 
-      const apiUrl = https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${langPair}&mt=1;
+      const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${langPair}&mt=1`;
 
       const response = await fetch(apiUrl);
       const data = await response.json();
@@ -113,7 +113,7 @@ export default function KurdishDictionary() {
             background: "linear-gradient(135deg, #f0e6cc 0%, #c9a84c 50%, #e8c87a 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-[4/29/2026 6:19 PM] خۆم: backgroundClip: "text",
+            backgroundClip: "text",
             lineHeight: 1.2,
           }}>
             کوردی · English
@@ -218,7 +218,7 @@ export default function KurdishDictionary() {
                   )}
                 </div>
                 <span style={{
-[4/29/2026 6:19 PM] خۆم: fontSize: "11px",
+                  fontSize: "11px",
                   letterSpacing: "2px",
                   textTransform: "uppercase",
                   color: "#c9a84c",
@@ -305,7 +305,8 @@ export default function KurdishDictionary() {
             </div>
           </div>
         )}
-[4/29/2026 6:19 PM] خۆم: {!result && !loading && (
+
+        {!result && !loading && (
           <div style={{ marginTop: "8px" }}>
             <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(232,224,208,0.2)", marginBottom: "12px" }}>
               نموونەکان · Try these
@@ -337,13 +338,13 @@ export default function KurdishDictionary() {
         )}
       </div>
 
-      <style>{
+      <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         * { box-sizing: border-box; }
         ::placeholder { color: rgba(232,224,208,0.2) !important; }
         input { caret-color: #c9a84c; }
-      }</style>
+      `}</style>
     </div>
   );
 }
