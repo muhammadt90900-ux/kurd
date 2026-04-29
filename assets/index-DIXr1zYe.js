@@ -76,13 +76,11 @@ Error generating stack: `+i.message+`
     overflow-x: hidden;
   }
 
-  /* شریطی سەرەوە */
   .kd-topbar {
     height: 3px;
     background: linear-gradient(90deg, var(--rust) 0%, var(--amber) 40%, var(--amber-light) 60%, var(--amber) 80%, var(--rust) 100%);
   }
 
-  /* هەلەکە */
   .kd-grain {
     position: fixed;
     inset: 0;
@@ -101,7 +99,6 @@ Error generating stack: `+i.message+`
     z-index: 1;
   }
 
-  /* هێدەر */
   .kd-header {
     text-align: center;
     margin-bottom: 56px;
@@ -164,24 +161,11 @@ Error generating stack: `+i.message+`
     height: 1px;
     background: var(--amber-border);
   }
-  .kd-rule-inner {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-  .kd-dot {
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: var(--amber);
-    opacity: 0.5;
-  }
+  .kd-rule-inner { display: flex; gap: 6px; align-items: center; }
+  .kd-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--amber); opacity: 0.5; }
   .kd-dot.big { width: 6px; height: 6px; opacity: 0.7; }
 
-  /* باکسی گەڕان */
-  .kd-search-wrap {
-    position: relative;
-    margin-bottom: 40px;
-  }
+  .kd-search-wrap { position: relative; margin-bottom: 40px; }
 
   .kd-input-row {
     display: flex;
@@ -195,13 +179,10 @@ Error generating stack: `+i.message+`
     border-color: var(--amber);
     box-shadow: 0 2px 0 var(--amber-pale), 0 12px 48px rgba(26,18,9,0.12);
   }
-
-  /* گۆشەی جوانی */
   .kd-input-row::before {
     content: '';
     position: absolute;
-    top: -4px; left: -4px;
-    right: -4px; bottom: -4px;
+    top: -4px; left: -4px; right: -4px; bottom: -4px;
     border: 1px solid var(--amber-border);
     pointer-events: none;
   }
@@ -233,16 +214,13 @@ Error generating stack: `+i.message+`
     min-width: 72px;
     font-weight: 500;
   }
-  .kd-btn:hover:not(:disabled) {
-    background: var(--amber-light);
-  }
+  .kd-btn:hover:not(:disabled) { background: var(--amber-light); }
   .kd-btn:active:not(:disabled) { transform: scale(0.97); }
   .kd-btn:disabled { opacity: 0.35; cursor: default; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
 
-  /* خەتای */
   .kd-error {
     display: flex;
     align-items: center;
@@ -255,7 +233,6 @@ Error generating stack: `+i.message+`
     margin-bottom: 28px;
   }
 
-  /* کارت */
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -270,8 +247,6 @@ Error generating stack: `+i.message+`
     position: relative;
     overflow: hidden;
   }
-
-  /* هێڵی سەرەوەی کارت */
   .kd-card::before {
     content: '';
     position: absolute;
@@ -280,7 +255,6 @@ Error generating stack: `+i.message+`
     background: linear-gradient(90deg, var(--amber), var(--amber-light), var(--amber));
   }
 
-  /* دیکۆری گۆشە */
   .kd-card-deco {
     position: absolute;
     bottom: 0; right: 0;
@@ -300,8 +274,6 @@ Error generating stack: `+i.message+`
     background: linear-gradient(180deg, rgba(184,134,27,0.03) 0%, transparent 100%);
     border-bottom: 1px solid var(--faint);
   }
-
-  .kd-word-block {}
 
   .kd-word {
     font-family: 'Playfair Display', serif;
@@ -344,7 +316,6 @@ Error generating stack: `+i.message+`
     align-self: flex-start;
   }
 
-  /* بەشەکان */
   .kd-section {
     padding: 24px 32px;
     border-bottom: 1px solid var(--faint);
@@ -362,12 +333,7 @@ Error generating stack: `+i.message+`
     gap: 10px;
     font-weight: 500;
   }
-  .kd-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--faint);
-  }
+  .kd-label::after { content: ''; flex: 1; height: 1px; background: var(--faint); }
 
   .kd-translation {
     font-family: 'Playfair Display', serif;
@@ -378,14 +344,12 @@ Error generating stack: `+i.message+`
     line-height: 1.25;
   }
 
-  /* نمونەکان */
   .kd-examples { display: flex; flex-direction: column; gap: 14px; }
 
   .kd-example {
     padding: 16px 20px;
     background: var(--paper);
     border: 1px solid var(--faint);
-    position: relative;
     display: flex;
     gap: 16px;
   }
@@ -401,33 +365,11 @@ Error generating stack: `+i.message+`
     opacity: 0.7;
   }
 
-  .kd-ex-body {}
+  .kd-ex-source { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 4px; }
+  .kd-ex-trans  { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.6; }
 
-  .kd-ex-source {
-    font-size: 15px;
-    color: var(--ink);
-    line-height: 1.7;
-    margin-bottom: 4px;
-    font-weight: 400;
-  }
+  .kd-loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; font-style: italic; }
 
-  .kd-ex-trans {
-    font-size: 13px;
-    color: var(--muted);
-    font-style: italic;
-    line-height: 1.6;
-  }
-
-  .kd-loading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--muted);
-    font-size: 14px;
-    font-style: italic;
-  }
-
-  /* بارکردنی کارت */
   .kd-card-skeleton {
     background: white;
     border: 1.5px solid var(--paper3);
@@ -450,10 +392,7 @@ Error generating stack: `+i.message+`
   .kd-skel-line { height: 12px; margin-bottom: 10px; }
   .kd-skel-big  { height: 36px; width: 50%; margin-bottom: 24px; }
 
-  /* سکشنی تاقیکردنەوە */
-  .kd-suggest-section {
-    margin-bottom: 40px;
-  }
+  .kd-suggest-section { margin-bottom: 40px; }
 
   .kd-section-head {
     display: flex;
@@ -466,19 +405,8 @@ Error generating stack: `+i.message+`
     color: var(--muted);
     font-weight: 500;
   }
-  .kd-section-head::before {
-    content: '';
-    width: 3px; height: 3px;
-    border-radius: 50%;
-    background: var(--amber);
-    flex-shrink: 0;
-  }
-  .kd-section-head::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--faint);
-  }
+  .kd-section-head::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+  .kd-section-head::after  { content: ''; flex: 1; height: 1px; background: var(--faint); }
 
   .kd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -492,7 +420,6 @@ Error generating stack: `+i.message+`
     font-family: 'DM Sans', sans-serif;
     transition: all 0.18s;
     box-shadow: 0 1px 0 var(--paper3);
-    font-weight: 400;
   }
   .kd-chip:hover {
     border-color: var(--amber);
@@ -501,7 +428,6 @@ Error generating stack: `+i.message+`
     box-shadow: 0 2px 0 var(--amber-pale);
   }
 
-  /* footer */
   .kd-footer {
     text-align: center;
     padding-top: 40px;
@@ -513,7 +439,6 @@ Error generating stack: `+i.message+`
   }
   .kd-footer strong { color: var(--amber); font-weight: 400; }
 
-  /* ریسپانسیڤ */
   @media (max-width: 480px) {
     .kd-wrap { padding: 40px 16px 80px; }
     .kd-card-head, .kd-section { padding-left: 20px; padding-right: 20px; }
@@ -522,4 +447,4 @@ Error generating stack: `+i.message+`
   }
 `;function Rd(){const[e,t]=xe.useState(""),[n,r]=xe.useState(null),[l,i]=xe.useState(!1),[o,u]=xe.useState(null),[s,d]=xe.useState([]),[h,m]=xe.useState([]),[p,y]=xe.useState(!1),k=xe.useRef(null);xe.useEffect(()=>{var c;(c=k.current)==null||c.focus()},[]);const x=c=>{if(!c)return"ku";const v=(c.match(/[\u0600-\u06FF\u0750-\u077F]/g)||[]).length,w=c.replace(/\s/g,"").length;return w===0||v/w>.3?"ku":"en"},D=async(c,v)=>{var w;y(!0),m([]);try{const _=v==="ku-en"?`Give 3 short example sentences using Kurdish Sorani word "${c}". JSON only:
 [{"ku":"...","en":"..."},{"ku":"...","en":"..."},{"ku":"...","en":"..."}]`:`Give 3 short example sentences using English word "${c}". JSON only:
-[{"en":"...","ku":"..."},{"en":"...","ku":"..."},{"en":"...","ku":"..."}]`,L=((w=(await(await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1e3,messages:[{role:"user",content:_}]})})).json()).content)==null?void 0:w.map(me=>me.text||"").join(""))||"";m(JSON.parse(L.replace(/```json|```/g,"").trim()))}catch{m([])}finally{y(!1)}},f=async()=>{if(e.trim()){i(!0),u(null),r(null),m([]);try{const c=x(e),v=c==="ku"?"ku-en":"en-ku",N=await(await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(e)}&langpair=${c==="ku"?"ckb|en":"en|ckb"}&mt=1`)).json();if(N.responseStatus!==200)throw new Error;const _={word:e,translation:N.responseData.translatedText,direction:v};r(_),d(z=>[{query:e,result:_},...z.slice(0,4)]),D(e,v)}catch{u("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.")}finally{i(!1)}}},a=(n==null?void 0:n.direction)==="ku-en";return C.jsxs(C.Fragment,{children:[C.jsx("style",{children:jd}),C.jsxs("div",{className:"kd-root",children:[C.jsx("div",{className:"kd-grain"}),C.jsx("div",{className:"kd-topbar"}),C.jsxs("div",{className:"kd-wrap",children:[C.jsxs("header",{className:"kd-header",children:[C.jsx("div",{className:"kd-eyebrow",children:"فەرهەنگی زیرەک"}),C.jsxs("h1",{className:"kd-title",children:["کوردی ",C.jsx("em",{children:"&"})," English"]}),C.jsx("p",{className:"kd-subtitle",children:"وشەیەکت بنووسە — زمانەکەت ئۆتۆماتیکی دەناسرێت"}),C.jsx("div",{className:"kd-rule",children:C.jsxs("div",{className:"kd-rule-inner",children:[C.jsx("div",{className:"kd-dot"}),C.jsx("div",{className:"kd-dot big"}),C.jsx("div",{className:"kd-dot"})]})})]}),C.jsx("div",{className:"kd-search-wrap",children:C.jsxs("div",{className:"kd-input-row",children:[C.jsx("input",{ref:k,className:"kd-input",value:e,onChange:c=>t(c.target.value),onKeyDown:c=>c.key==="Enter"&&f(),placeholder:"وشە بنووسە · Type a word…"}),C.jsx("button",{className:"kd-btn",onClick:f,disabled:l||!e.trim(),children:l?C.jsx("span",{className:"spinning",children:"⊙"}):"→"})]})}),o&&C.jsxs("div",{className:"kd-error",children:[C.jsx("span",{children:"⚠"}),o]}),l&&C.jsxs("div",{className:"kd-card-skeleton",children:[C.jsx("div",{className:"kd-skel kd-skel-big"}),C.jsx("div",{className:"kd-skel kd-skel-line",style:{width:"80%"}}),C.jsx("div",{className:"kd-skel kd-skel-line",style:{width:"60%"}}),C.jsx("div",{className:"kd-skel kd-skel-line",style:{width:"70%"}})]}),n&&!l&&C.jsxs("div",{className:"kd-card",children:[C.jsx("div",{className:"kd-card-deco"}),C.jsxs("div",{className:"kd-card-head",children:[C.jsxs("div",{className:"kd-word-block",children:[C.jsx("div",{className:"kd-word",children:n.word}),C.jsx("div",{className:"kd-dir-label",children:a?"Kurdish Sorani → English":"English → Kurdish Sorani"})]}),C.jsx("div",{className:"kd-tag",children:"وشە · Word"})]}),C.jsxs("div",{className:"kd-section",children:[C.jsx("div",{className:"kd-label",children:"وەرگێڕان · Translation"}),C.jsx("div",{className:"kd-translation",children:n.translation})]}),C.jsxs("div",{className:"kd-section",children:[C.jsx("div",{className:"kd-label",children:"نمونەی ڕستەکان · Examples"}),p&&C.jsxs("div",{className:"kd-loading",children:[C.jsx("span",{className:"spinning",children:"⊙"}),"نمونەکان دەگەیەنرێن…"]}),!p&&h.length>0&&C.jsx("div",{className:"kd-examples",children:h.map((c,v)=>C.jsxs("div",{className:"kd-example",children:[C.jsxs("div",{className:"kd-ex-num",children:[v+1,"."]}),C.jsxs("div",{className:"kd-ex-body",children:[C.jsx("div",{className:"kd-ex-source",children:a?c.ku:c.en}),C.jsx("div",{className:"kd-ex-trans",children:a?c.en:c.ku})]})]},v))}),!p&&h.length===0&&C.jsx("div",{style:{color:"var(--muted)",fontSize:13,fontStyle:"italic"},children:"نمونەیەک نەدۆزرایەوە"})]})]}),s.length>1&&C.jsxs("div",{className:"kd-suggest-section",children:[C.jsx("div",{className:"kd-section-head",children:"مێژووی گەڕان · Recent"}),C.jsx("div",{className:"kd-chips",children:s.slice(1).map((c,v)=>C.jsx("button",{className:"kd-chip",onClick:()=>{t(c.query),r(c.result),D(c.query,c.result.direction)},children:c.query},v))})]}),!n&&!l&&C.jsxs("div",{className:"kd-suggest-section",children:[C.jsx("div",{className:"kd-section-head",children:"تاقی بکەرەوە · Try these"}),C.jsx("div",{className:"kd-chips",children:["خۆشەویستی","mountain","ئازادی","knowledge","ئاو","friendship"].map(c=>C.jsx("button",{className:"kd-chip",onClick:()=>{t(c)},children:c},c))})]}),C.jsxs("footer",{className:"kd-footer",children:[C.jsx("strong",{children:"✦"})," کوردی · English Dictionary ",C.jsx("strong",{children:"✦"})]})]})]})]})}function Od(){return C.jsx(Rd,{})}Ql.createRoot(document.getElementById("root")).render(C.jsx(yc.StrictMode,{children:C.jsx(Od,{})}));
+[{"en":"...","ku":"..."},{"en":"...","ku":"..."},{"en":"...","ku":"..."}]`,L=((w=(await(await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1e3,messages:[{role:"user",content:_}]})})).json()).content)==null?void 0:w.map(me=>me.text||"").join(""))||"";m(JSON.parse(L.replace(/```json|```/g,"").trim()))}catch{m([])}finally{y(!1)}},f=async()=>{if(e.trim()){i(!0),u(null),r(null),m([]);try{const c=x(e),v=c==="ku"?"ku-en":"en-ku",N=await(await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(e)}&langpair=${c==="ku"?"ckb|en":"en|ckb"}&mt=1`)).json();if(N.responseStatus!==200)throw new Error;const _={word:e,translation:N.responseData.translatedText,direction:v};r(_),d(z=>[{query:e,result:_},...z.slice(0,4)]),D(e,v)}catch{u("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.")}finally{i(!1)}}},a=(n==null?void 0:n.direction)==="ku-en";return C.jsxs(C.Fragment,{children:[C.jsx("style",{children:jd}),C.jsxs("div",{className:"kd-root",children:[C.jsx("div",{className:"kd-grain"}),C.jsx("div",{className:"kd-topbar"}),C.jsxs("div",{className:"kd-wrap",children:[C.jsxs("header",{className:"kd-header",children:[C.jsx("div",{className:"kd-eyebrow",children:"فەرهەنگی زیرەک"}),C.jsxs("h1",{className:"kd-title",children:["کوردی ",C.jsx("em",{children:"&"})," English"]}),C.jsx("p",{className:"kd-subtitle",children:"وشەیەکت بنووسە — زمانەکەت ئۆتۆماتیکی دەناسرێت"}),C.jsx("div",{className:"kd-rule",children:C.jsxs("div",{className:"kd-rule-inner",children:[C.jsx("div",{className:"kd-dot"}),C.jsx("div",{className:"kd-dot big"}),C.jsx("div",{className:"kd-dot"})]})})]}),C.jsx("div",{className:"kd-search-wrap",children:C.jsxs("div",{className:"kd-input-row",children:[C.jsx("input",{ref:k,className:"kd-input",value:e,onChange:c=>t(c.target.value),onKeyDown:c=>c.key==="Enter"&&f(),placeholder:"وشە بنووسە · Type a word…"}),C.jsx("button",{className:"kd-btn",onClick:f,disabled:l||!e.trim(),children:l?C.jsx("span",{className:"spinning",children:"⊙"}):"→"})]})}),o&&C.jsxs("div",{className:"kd-error",children:[C.jsx("span",{children:"⚠"}),o]}),l&&C.jsxs("div",{className:"kd-card-skeleton",children:[C.jsx("div",{className:"kd-skel kd-skel-big"}),C.jsx("div",{className:"kd-skel kd-skel-line",style:{width:"80%"}}),C.jsx("div",{className:"kd-skel kd-skel-line",style:{width:"60%"}}),C.jsx("div",{className:"kd-skel kd-skel-line",style:{width:"70%"}})]}),n&&!l&&C.jsxs("div",{className:"kd-card",children:[C.jsx("div",{className:"kd-card-deco"}),C.jsxs("div",{className:"kd-card-head",children:[C.jsxs("div",{children:[C.jsx("div",{className:"kd-word",children:n.word}),C.jsx("div",{className:"kd-dir-label",children:a?"Kurdish Sorani → English":"English → Kurdish Sorani"})]}),C.jsx("div",{className:"kd-tag",children:"وشە · Word"})]}),C.jsxs("div",{className:"kd-section",children:[C.jsx("div",{className:"kd-label",children:"وەرگێڕان · Translation"}),C.jsx("div",{className:"kd-translation",children:n.translation})]}),C.jsxs("div",{className:"kd-section",children:[C.jsx("div",{className:"kd-label",children:"نمونەی ڕستەکان · Examples"}),p&&C.jsxs("div",{className:"kd-loading",children:[C.jsx("span",{className:"spinning",children:"⊙"})," نمونەکان دەگەیەنرێن…"]}),!p&&h.length>0&&C.jsx("div",{className:"kd-examples",children:h.map((c,v)=>C.jsxs("div",{className:"kd-example",children:[C.jsxs("div",{className:"kd-ex-num",children:[v+1,"."]}),C.jsxs("div",{children:[C.jsx("div",{className:"kd-ex-source",children:a?c.ku:c.en}),C.jsx("div",{className:"kd-ex-trans",children:a?c.en:c.ku})]})]},v))}),!p&&h.length===0&&C.jsx("div",{style:{color:"var(--muted)",fontSize:13,fontStyle:"italic"},children:"نمونەیەک نەدۆزرایەوە"})]})]}),s.length>1&&C.jsxs("div",{className:"kd-suggest-section",children:[C.jsx("div",{className:"kd-section-head",children:"مێژووی گەڕان · Recent"}),C.jsx("div",{className:"kd-chips",children:s.slice(1).map((c,v)=>C.jsx("button",{className:"kd-chip",onClick:()=>{t(c.query),r(c.result),D(c.query,c.result.direction)},children:c.query},v))})]}),!n&&!l&&C.jsxs("div",{className:"kd-suggest-section",children:[C.jsx("div",{className:"kd-section-head",children:"تاقی بکەرەوە · Try these"}),C.jsx("div",{className:"kd-chips",children:["خۆشەویستی","mountain","ئازادی","knowledge","ئاو","friendship"].map(c=>C.jsx("button",{className:"kd-chip",onClick:()=>t(c),children:c},c))})]}),C.jsxs("footer",{className:"kd-footer",children:[C.jsx("strong",{children:"✦"})," کوردی · English Dictionary ",C.jsx("strong",{children:"✦"})]})]})]})]})}function Od(){return C.jsx(Rd,{})}Ql.createRoot(document.getElementById("root")).render(C.jsx(yc.StrictMode,{children:C.jsx(Od,{})}));
