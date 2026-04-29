@@ -1,350 +1,698 @@
 import { useState, useRef, useEffect } from "react";
 
+const style = `
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Noto+Naskh+Arabic:wght@400;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1209;
+    --ink2: #2d2010;
+    --paper: #faf6ee;
+    --paper2: #f3ead8;
+    --paper3: #ede0c4;
+    --amber: #b8861b;
+    --amber-light: #d4a63a;
+    --amber-pale: #f0d898;
+    --amber-faint: rgba(184,134,27,0.08);
+    --amber-border: rgba(184,134,27,0.22);
+    --rust: #8b3a1a;
+    --muted: rgba(26,18,9,0.45);
+    --faint: rgba(26,18,9,0.18);
+    --radius: 2px;
+  }
+
+  body { background: var(--paper); }
+
+  ::selection { background: var(--amber-pale); color: var(--ink); }
+  ::placeholder { color: var(--faint) !important; }
+  input { caret-color: var(--amber); }
+
+  .kd-root {
+    min-height: 100vh;
+    background: var(--paper);
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8861b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    font-family: 'DM Sans', sans-serif;
+    color: var(--ink);
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* شریطی سەرەوە */
+  .kd-topbar {
+    height: 3px;
+    background: linear-gradient(90deg, var(--rust) 0%, var(--amber) 40%, var(--amber-light) 60%, var(--amber) 80%, var(--rust) 100%);
+  }
+
+  /* هەلەکە */
+  .kd-grain {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 200px;
+  }
+
+  .kd-wrap {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 64px 28px 100px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* هێدەر */
+  .kd-header {
+    text-align: center;
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .kd-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 500;
+    margin-bottom: 18px;
+  }
+  .kd-eyebrow::before, .kd-eyebrow::after {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--amber));
+  }
+  .kd-eyebrow::after { transform: scaleX(-1); }
+
+  .kd-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 7vw, 62px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-bottom: 4px;
+    letter-spacing: -1px;
+  }
+
+  .kd-title em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .kd-subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-weight: 300;
+    margin-top: 14px;
+    letter-spacing: 0.3px;
+  }
+
+  .kd-rule {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 28px;
+    color: var(--amber-border);
+  }
+  .kd-rule::before, .kd-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--amber-border);
+  }
+  .kd-rule-inner {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .kd-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--amber);
+    opacity: 0.5;
+  }
+  .kd-dot.big { width: 6px; height: 6px; opacity: 0.7; }
+
+  /* باکسی گەڕان */
+  .kd-search-wrap {
+    position: relative;
+    margin-bottom: 40px;
+  }
+
+  .kd-input-row {
+    display: flex;
+    background: white;
+    border: 1.5px solid var(--paper3);
+    box-shadow: 0 2px 0 var(--paper3), 0 12px 48px rgba(26,18,9,0.08);
+    transition: border-color 0.25s, box-shadow 0.25s;
+    position: relative;
+  }
+  .kd-input-row:focus-within {
+    border-color: var(--amber);
+    box-shadow: 0 2px 0 var(--amber-pale), 0 12px 48px rgba(26,18,9,0.12);
+  }
+
+  /* گۆشەی جوانی */
+  .kd-input-row::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: -4px;
+    right: -4px; bottom: -4px;
+    border: 1px solid var(--amber-border);
+    pointer-events: none;
+  }
+
+  .kd-input {
+    flex: 1;
+    padding: 22px 28px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--ink);
+    font-size: 20px;
+    font-family: 'Playfair Display', serif;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+  }
+
+  .kd-btn {
+    padding: 22px 30px;
+    background: var(--amber);
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    font-weight: 500;
+  }
+  .kd-btn:hover:not(:disabled) {
+    background: var(--amber-light);
+  }
+  .kd-btn:active:not(:disabled) { transform: scale(0.97); }
+  .kd-btn:disabled { opacity: 0.35; cursor: default; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
+
+  /* خەتای */
+  .kd-error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: rgba(139,58,26,0.06);
+    border-left: 3px solid var(--rust);
+    color: var(--rust);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  /* کارت */
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .kd-card {
+    background: white;
+    border: 1.5px solid var(--paper3);
+    box-shadow: 0 2px 0 var(--paper3), 0 16px 64px rgba(26,18,9,0.07);
+    margin-bottom: 40px;
+    animation: slideUp 0.45s cubic-bezier(0.22,1,0.36,1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* هێڵی سەرەوەی کارت */
+  .kd-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--amber), var(--amber-light), var(--amber));
+  }
+
+  /* دیکۆری گۆشە */
+  .kd-card-deco {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 80px; height: 80px;
+    opacity: 0.04;
+    background: radial-gradient(circle at bottom right, var(--amber) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .kd-card-head {
+    padding: 28px 32px 24px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    background: linear-gradient(180deg, rgba(184,134,27,0.03) 0%, transparent 100%);
+    border-bottom: 1px solid var(--faint);
+  }
+
+  .kd-word-block {}
+
+  .kd-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .kd-dir-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 6px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .kd-dir-label::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1px;
+    background: var(--amber);
+    margin-right: 2px;
+  }
+
+  .kd-tag {
+    font-size: 9px;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid var(--amber-border);
+    padding: 6px 14px;
+    background: var(--amber-faint);
+    font-weight: 500;
+    align-self: flex-start;
+  }
+
+  /* بەشەکان */
+  .kd-section {
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--faint);
+  }
+  .kd-section:last-child { border-bottom: none; }
+
+  .kd-label {
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+  }
+  .kd-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--faint);
+  }
+
+  .kd-translation {
+    font-family: 'Playfair Display', serif;
+    font-size: 34px;
+    color: var(--amber);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.25;
+  }
+
+  /* نمونەکان */
+  .kd-examples { display: flex; flex-direction: column; gap: 14px; }
+
+  .kd-example {
+    padding: 16px 20px;
+    background: var(--paper);
+    border: 1px solid var(--faint);
+    position: relative;
+    display: flex;
+    gap: 16px;
+  }
+
+  .kd-ex-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 11px;
+    color: var(--amber);
+    font-style: italic;
+    min-width: 20px;
+    padding-top: 2px;
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .kd-ex-body {}
+
+  .kd-ex-source {
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.7;
+    margin-bottom: 4px;
+    font-weight: 400;
+  }
+
+  .kd-ex-trans {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.6;
+  }
+
+  .kd-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  /* بارکردنی کارت */
+  .kd-card-skeleton {
+    background: white;
+    border: 1.5px solid var(--paper3);
+    box-shadow: 0 2px 0 var(--paper3), 0 12px 40px rgba(26,18,9,0.06);
+    margin-bottom: 40px;
+    padding: 32px;
+    animation: slideUp 0.35s ease;
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -600px 0; }
+    100% { background-position: 600px 0; }
+  }
+  .kd-skel {
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--paper2) 0px, var(--paper3) 200px, var(--paper2) 400px);
+    background-size: 600px 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+  .kd-skel-line { height: 12px; margin-bottom: 10px; }
+  .kd-skel-big  { height: 36px; width: 50%; margin-bottom: 24px; }
+
+  /* سکشنی تاقیکردنەوە */
+  .kd-suggest-section {
+    margin-bottom: 40px;
+  }
+
+  .kd-section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .kd-section-head::before {
+    content: '';
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+  }
+  .kd-section-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--faint);
+  }
+
+  .kd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .kd-chip {
+    padding: 8px 18px;
+    background: white;
+    border: 1.5px solid var(--paper3);
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.18s;
+    box-shadow: 0 1px 0 var(--paper3);
+    font-weight: 400;
+  }
+  .kd-chip:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: var(--amber-faint);
+    box-shadow: 0 2px 0 var(--amber-pale);
+  }
+
+  /* footer */
+  .kd-footer {
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--faint);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+  .kd-footer strong { color: var(--amber); font-weight: 400; }
+
+  /* ریسپانسیڤ */
+  @media (max-width: 480px) {
+    .kd-wrap { padding: 40px 16px 80px; }
+    .kd-card-head, .kd-section { padding-left: 20px; padding-right: 20px; }
+    .kd-title { letter-spacing: -0.5px; }
+    .kd-translation { font-size: 28px; }
+  }
+`;
+
 export default function KurdishDictionary() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [examples, setExamples] = useState([]);
+  const [examplesLoading, setExamplesLoading] = useState(false);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+  useEffect(() => { inputRef.current?.focus(); }, []);
 
   const detectLanguage = (text) => {
     if (!text) return "ku";
-    const arabicPattern = /[\u0600-\u06FF\u0750-\u077F]/;
-    const arabicChars = (text.match(arabicPattern) || []).length;
-    const totalChars = text.replace(/\s/g, "").length;
-    if (totalChars === 0) return "ku";
-    return arabicChars / totalChars > 0.3 ? "ku" : "en";
+    const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F]/g) || []).length;
+    const total = text.replace(/\s/g, "").length;
+    return total === 0 ? "ku" : arabicChars / total > 0.3 ? "ku" : "en";
+  };
+
+  const fetchExamples = async (word, direction) => {
+    setExamplesLoading(true);
+    setExamples([]);
+    try {
+      const isKu = direction === "ku-en";
+      const prompt = isKu
+        ? `Give 3 short example sentences using Kurdish Sorani word "${word}". JSON only:\n[{"ku":"...","en":"..."},{"ku":"...","en":"..."},{"ku":"...","en":"..."}]`
+        : `Give 3 short example sentences using English word "${word}". JSON only:\n[{"en":"...","ku":"..."},{"en":"...","ku":"..."},{"en":"...","ku":"..."}]`;
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      const data = await res.json();
+      const text = data.content?.map(i => i.text || "").join("") || "";
+      setExamples(JSON.parse(text.replace(/```json|```/g, "").trim()));
+    } catch { setExamples([]); }
+    finally { setExamplesLoading(false); }
   };
 
   const search = async () => {
     if (!query.trim()) return;
-    setLoading(true);
-    setError(null);
-    setResult(null);
-
+    setLoading(true); setError(null); setResult(null); setExamples([]);
     try {
-      const sourceLang = detectLanguage(query);
-      const langPair = sourceLang === "ku" ? "ckb|en" : "en|ckb";
-      const direction = sourceLang === "ku" ? "ku-en" : "en-ku";
-
-      const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${langPair}&mt=1`;
-
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-
-      if (data.responseStatus !== 200) {
-        throw new Error(data.responseDetails || "وەرگێڕان شکستی هێنا");
-      }
-
-      const translatedText = data.responseData.translatedText;
-
-      const parsedResult = {
-        word: query,
-        translation: translatedText,
-        transliteration: null,
-        partOfSpeech: null,
-        definition: null,
-        examples: [],
-        direction: direction,
-      };
-
-      setResult(parsedResult);
-      setHistory(prev => [{ query, result: parsedResult }, ...prev.slice(0, 4)]);
-    } catch (err) {
-      setError("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      const lang = detectLanguage(query);
+      const direction = lang === "ku" ? "ku-en" : "en-ku";
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${lang === "ku" ? "ckb|en" : "en|ckb"}&mt=1`);
+      const data = await res.json();
+      if (data.responseStatus !== 200) throw new Error();
+      const r = { word: query, translation: data.responseData.translatedText, direction };
+      setResult(r);
+      setHistory(prev => [{ query, result: r }, ...prev.slice(0, 4)]);
+      fetchExamples(query, direction);
+    } catch { setError("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە."); }
+    finally { setLoading(false); }
   };
 
-  const handleKey = (e) => {
-    if (e.key === "Enter") search();
-  };
-
-  const isKurdishDir = result?.direction === "ku-en";
+  const isKu = result?.direction === "ku-en";
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "linear-gradient(135deg, #0a0a0f 0%, #12131f 50%, #0d1117 100%)",
-      fontFamily: "'Georgia', 'Times New Roman', serif",
-      color: "#e8e0d0",
-      padding: "0",
-      position: "relative",
-      overflow: "hidden",
-    }}>
-      <div style={{
-        position: "fixed", inset: 0, pointerEvents: "none",
-        background: "radial-gradient(ellipse at 20% 20%, rgba(180,140,60,0.06) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(100,160,200,0.05) 0%, transparent 60%)",
-      }} />
+    <>
+      <style>{style}</style>
+      <div className="kd-root">
+        <div className="kd-grain" />
+        <div className="kd-topbar" />
 
-      <div style={{
-        height: "4px",
-        background: "linear-gradient(90deg, transparent, #c9a84c, #e8c87a, #c9a84c, transparent)",
-      }} />
+        <div className="kd-wrap">
+          {/* هێدەر */}
+          <header className="kd-header">
+            <div className="kd-eyebrow">فەرهەنگی زیرەک</div>
+            <h1 className="kd-title">
+              کوردی <em>&amp;</em> English
+            </h1>
+            <p className="kd-subtitle">وشەیەکت بنووسە — زمانەکەت ئۆتۆماتیکی دەناسرێت</p>
+            <div className="kd-rule">
+              <div className="kd-rule-inner">
+                <div className="kd-dot" />
+                <div className="kd-dot big" />
+                <div className="kd-dot" />
+              </div>
+            </div>
+          </header>
 
-      <div style={{ maxWidth: "680px", margin: "0 auto", padding: "40px 20px 60px" }}>
-        <div style={{ textAlign: "center", marginBottom: "48px" }}>
-          <div style={{
-            display: "inline-block",
-            border: "1px solid rgba(201,168,76,0.3)",
-            borderRadius: "2px",
-            padding: "6px 20px",
-            marginBottom: "16px",
-            fontSize: "11px",
-            letterSpacing: "4px",
-            textTransform: "uppercase",
-            color: "#c9a84c",
-            background: "rgba(201,168,76,0.05)",
-          }}>
-            فەرهەنگی زیرەک · Smart Dictionary
+          {/* باکسی گەڕان */}
+          <div className="kd-search-wrap">
+            <div className="kd-input-row">
+              <input
+                ref={inputRef}
+                className="kd-input"
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && search()}
+                placeholder="وشە بنووسە · Type a word…"
+              />
+              <button className="kd-btn" onClick={search} disabled={loading || !query.trim()}>
+                {loading ? <span className="spinning">⊙</span> : "→"}
+              </button>
+            </div>
           </div>
-          <h1 style={{
-            fontSize: "clamp(28px, 6vw, 46px)",
-            fontWeight: "400",
-            letterSpacing: "-0.5px",
-            margin: "0 0 8px",
-            background: "linear-gradient(135deg, #f0e6cc 0%, #c9a84c 50%, #e8c87a 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            lineHeight: 1.2,
-          }}>
-            کوردی · English
-          </h1>
-          <p style={{ color: "rgba(232,224,208,0.45)", fontSize: "14px", margin: 0 }}>
-            وشەیەکت بنووسە — زمانەکەت ئۆتۆماتیکی دەناسرێت
-          </p>
-        </div>
 
-        <div style={{ position: "relative", marginBottom: "32px" }}>
-          <div style={{
-            display: "flex",
-            gap: "0",
-            border: "1px solid rgba(201,168,76,0.3)",
-            borderRadius: "4px",
-            overflow: "hidden",
-            background: "rgba(255,255,255,0.03)",
-            boxShadow: "0 0 0 1px rgba(201,168,76,0.05), 0 4px 24px rgba(0,0,0,0.3)",
-            transition: "box-shadow 0.3s",
-          }}>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              onKeyDown={handleKey}
-              placeholder="وشە بنووسە · Type a word..."
-              style={{
-                flex: 1,
-                padding: "18px 24px",
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "#e8e0d0",
-                fontSize: "18px",
-                fontFamily: "inherit",
-                letterSpacing: "0.3px",
-              }}
-            />
-            <button
-              onClick={search}
-              disabled={loading || !query.trim()}
-              style={{
-                padding: "18px 28px",
-                background: loading ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.2)",
-                border: "none",
-                borderLeft: "1px solid rgba(201,168,76,0.2)",
-                color: "#c9a84c",
-                cursor: loading ? "wait" : "pointer",
-                fontSize: "20px",
-                transition: "background 0.2s",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: "64px",
-              }}
-            >
-              {loading ? (
-                <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>◌</span>
-              ) : "⟶"}
-            </button>
-          </div>
-        </div>
+          {/* خەتا */}
+          {error && (
+            <div className="kd-error">
+              <span>⚠</span>
+              {error}
+            </div>
+          )}
 
-        {error && (
-          <div style={{
-            padding: "16px 20px",
-            background: "rgba(220,60,60,0.1)",
-            border: "1px solid rgba(220,60,60,0.3)",
-            borderRadius: "4px",
-            color: "#f08080",
-            marginBottom: "24px",
-            fontSize: "14px",
-          }}>
-            {error}
-          </div>
-        )}
+          {/* بارکردن */}
+          {loading && (
+            <div className="kd-card-skeleton">
+              <div className="kd-skel kd-skel-big" />
+              <div className="kd-skel kd-skel-line" style={{ width: "80%" }} />
+              <div className="kd-skel kd-skel-line" style={{ width: "60%" }} />
+              <div className="kd-skel kd-skel-line" style={{ width: "70%" }} />
+            </div>
+          )}
 
-        {result && (
-          <div style={{
-            border: "1px solid rgba(201,168,76,0.2)",
-            borderRadius: "4px",
-            overflow: "hidden",
-            background: "rgba(255,255,255,0.02)",
-            boxShadow: "0 8px 40px rgba(0,0,0,0.3)",
-            marginBottom: "32px",
-            animation: "fadeUp 0.4s ease",
-          }}>
-            <div style={{
-              padding: "24px 28px 20px",
-              borderBottom: "1px solid rgba(201,168,76,0.12)",
-              background: "rgba(201,168,76,0.04)",
-            }}>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-                <div>
-                  <div style={{ fontSize: "28px", fontWeight: "400", marginBottom: "6px", color: "#f0e6cc" }}>
-                    {result.word}
+          {/* ئەنجام */}
+          {result && !loading && (
+            <div className="kd-card">
+              <div className="kd-card-deco" />
+
+              <div className="kd-card-head">
+                <div className="kd-word-block">
+                  <div className="kd-word">{result.word}</div>
+                  <div className="kd-dir-label">
+                    {isKu ? "Kurdish Sorani → English" : "English → Kurdish Sorani"}
                   </div>
-                  {result.transliteration && (
-                    <div style={{ fontSize: "13px", color: "rgba(201,168,76,0.6)", fontStyle: "italic" }}>
-                      /{result.transliteration}/
-                    </div>
-                  )}
                 </div>
-                <span style={{
-                  fontSize: "11px",
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  color: "#c9a84c",
-                  background: "rgba(201,168,76,0.1)",
-                  border: "1px solid rgba(201,168,76,0.2)",
-                  padding: "4px 10px",
-                  borderRadius: "2px",
-                  alignSelf: "flex-start",
-                  marginTop: "4px",
-                }}>
-                  {result.partOfSpeech || "وشە"}
-                </span>
+                <div className="kd-tag">وشە · Word</div>
+              </div>
+
+              {/* وەرگێڕان */}
+              <div className="kd-section">
+                <div className="kd-label">وەرگێڕان · Translation</div>
+                <div className="kd-translation">{result.translation}</div>
+              </div>
+
+              {/* نمونەکان */}
+              <div className="kd-section">
+                <div className="kd-label">نمونەی ڕستەکان · Examples</div>
+                {examplesLoading && (
+                  <div className="kd-loading">
+                    <span className="spinning">⊙</span>
+                    نمونەکان دەگەیەنرێن…
+                  </div>
+                )}
+                {!examplesLoading && examples.length > 0 && (
+                  <div className="kd-examples">
+                    {examples.map((ex, i) => (
+                      <div key={i} className="kd-example">
+                        <div className="kd-ex-num">{i + 1}.</div>
+                        <div className="kd-ex-body">
+                          <div className="kd-ex-source">{isKu ? ex.ku : ex.en}</div>
+                          <div className="kd-ex-trans">{isKu ? ex.en : ex.ku}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!examplesLoading && examples.length === 0 && (
+                  <div style={{ color: "var(--muted)", fontSize: 13, fontStyle: "italic" }}>
+                    نمونەیەک نەدۆزرایەوە
+                  </div>
+                )}
               </div>
             </div>
+          )}
 
-            <div style={{ padding: "24px 28px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-              <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(232,224,208,0.35)", marginBottom: "10px" }}>
-                وەرگێڕان · Translation
+          {/* مێژووی گەڕان */}
+          {history.length > 1 && (
+            <div className="kd-suggest-section">
+              <div className="kd-section-head">مێژووی گەڕان · Recent</div>
+              <div className="kd-chips">
+                {history.slice(1).map((h, i) => (
+                  <button key={i} className="kd-chip"
+                    onClick={() => { setQuery(h.query); setResult(h.result); fetchExamples(h.query, h.result.direction); }}>
+                    {h.query}
+                  </button>
+                ))}
               </div>
-              <div style={{ fontSize: "26px", color: "#c9a84c", fontWeight: "400" }}>
-                {result.translation}
+            </div>
+          )}
+
+          {/* پێشنیار */}
+          {!result && !loading && (
+            <div className="kd-suggest-section">
+              <div className="kd-section-head">تاقی بکەرەوە · Try these</div>
+              <div className="kd-chips">
+                {["خۆشەویستی", "mountain", "ئازادی", "knowledge", "ئاو", "friendship"].map(w => (
+                  <button key={w} className="kd-chip" onClick={() => { setQuery(w); }}>
+                    {w}
+                  </button>
+                ))}
               </div>
             </div>
+          )}
 
-            {result.definition && (
-              <div style={{ padding: "20px 28px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(232,224,208,0.35)", marginBottom: "10px" }}>
-                  مانا · Definition
-                </div>
-                <p style={{ margin: 0, color: "rgba(232,224,208,0.75)", fontSize: "15px", lineHeight: 1.7 }}>
-                  {result.definition}
-                </p>
-              </div>
-            )}
-
-            {result.examples?.length > 0 && (
-              <div style={{ padding: "20px 28px" }}>
-                <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(232,224,208,0.35)", marginBottom: "14px" }}>
-                  نموونەکان · Examples
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  {result.examples.map((ex, i) => (
-                    <div key={i} style={{
-                      borderLeft: "2px solid rgba(201,168,76,0.3)",
-                      paddingLeft: "16px",
-                    }}>
-                      <div style={{ fontSize: "15px", color: "#e8e0d0", marginBottom: "4px" }}>{ex.source}</div>
-                      <div style={{ fontSize: "14px", color: "rgba(201,168,76,0.7)", fontStyle: "italic" }}>{ex.translation}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {history.length > 1 && (
-          <div>
-            <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(232,224,208,0.25)", marginBottom: "12px" }}>
-              مێژووی گەڕان · Recent
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {history.slice(1).map((h, i) => (
-                <button
-                  key={i}
-                  onClick={() => { setQuery(h.query); setResult(h.result); }}
-                  style={{
-                    padding: "6px 14px",
-                    background: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(201,168,76,0.15)",
-                    borderRadius: "2px",
-                    color: "rgba(232,224,208,0.5)",
-                    cursor: "pointer",
-                    fontSize: "13px",
-                    transition: "all 0.2s",
-                    fontFamily: "inherit",
-                  }}
-                  onMouseEnter={e => { e.target.style.borderColor = "rgba(201,168,76,0.4)"; e.target.style.color = "#c9a84c"; }}
-                  onMouseLeave={e => { e.target.style.borderColor = "rgba(201,168,76,0.15)"; e.target.style.color = "rgba(232,224,208,0.5)"; }}
-                >
-                  {h.query}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {!result && !loading && (
-          <div style={{ marginTop: "8px" }}>
-            <div style={{ fontSize: "11px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(232,224,208,0.2)", marginBottom: "12px" }}>
-              نموونەکان · Try these
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {["خۆشەویستی", "mountain", "ئازادی", "knowledge", "ئاو", "friendship"].map(w => (
-                <button
-                  key={w}
-                  onClick={() => { setQuery(w); }}
-                  style={{
-                    padding: "7px 16px",
-                    background: "rgba(255,255,255,0.02)",
-                    border: "1px solid rgba(201,168,76,0.12)",
-                    borderRadius: "2px",
-                    color: "rgba(232,224,208,0.4)",
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    fontFamily: "inherit",
-                    transition: "all 0.2s",
-                  }}
-                  onMouseEnter={e => { e.target.style.borderColor = "rgba(201,168,76,0.35)"; e.target.style.color = "#c9a84c"; }}
-                  onMouseLeave={e => { e.target.style.borderColor = "rgba(201,168,76,0.12)"; e.target.style.color = "rgba(232,224,208,0.4)"; }}
-                >
-                  {w}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          {/* فووتەر */}
+          <footer className="kd-footer">
+            <strong>✦</strong> کوردی · English Dictionary <strong>✦</strong>
+          </footer>
+        </div>
       </div>
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        * { box-sizing: border-box; }
-        ::placeholder { color: rgba(232,224,208,0.2) !important; }
-        input { caret-color: #c9a84c; }
-      `}</style>
-    </div>
+    </>
   );
 }
