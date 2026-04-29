@@ -39,13 +39,11 @@ const style = `
     overflow-x: hidden;
   }
 
-  /* شریطی سەرەوە */
   .kd-topbar {
     height: 3px;
     background: linear-gradient(90deg, var(--rust) 0%, var(--amber) 40%, var(--amber-light) 60%, var(--amber) 80%, var(--rust) 100%);
   }
 
-  /* هەلەکە */
   .kd-grain {
     position: fixed;
     inset: 0;
@@ -64,7 +62,6 @@ const style = `
     z-index: 1;
   }
 
-  /* هێدەر */
   .kd-header {
     text-align: center;
     margin-bottom: 56px;
@@ -127,24 +124,11 @@ const style = `
     height: 1px;
     background: var(--amber-border);
   }
-  .kd-rule-inner {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-  .kd-dot {
-    width: 4px; height: 4px;
-    border-radius: 50%;
-    background: var(--amber);
-    opacity: 0.5;
-  }
+  .kd-rule-inner { display: flex; gap: 6px; align-items: center; }
+  .kd-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--amber); opacity: 0.5; }
   .kd-dot.big { width: 6px; height: 6px; opacity: 0.7; }
 
-  /* باکسی گەڕان */
-  .kd-search-wrap {
-    position: relative;
-    margin-bottom: 40px;
-  }
+  .kd-search-wrap { position: relative; margin-bottom: 40px; }
 
   .kd-input-row {
     display: flex;
@@ -158,13 +142,10 @@ const style = `
     border-color: var(--amber);
     box-shadow: 0 2px 0 var(--amber-pale), 0 12px 48px rgba(26,18,9,0.12);
   }
-
-  /* گۆشەی جوانی */
   .kd-input-row::before {
     content: '';
     position: absolute;
-    top: -4px; left: -4px;
-    right: -4px; bottom: -4px;
+    top: -4px; left: -4px; right: -4px; bottom: -4px;
     border: 1px solid var(--amber-border);
     pointer-events: none;
   }
@@ -196,16 +177,13 @@ const style = `
     min-width: 72px;
     font-weight: 500;
   }
-  .kd-btn:hover:not(:disabled) {
-    background: var(--amber-light);
-  }
+  .kd-btn:hover:not(:disabled) { background: var(--amber-light); }
   .kd-btn:active:not(:disabled) { transform: scale(0.97); }
   .kd-btn:disabled { opacity: 0.35; cursor: default; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
 
-  /* خەتای */
   .kd-error {
     display: flex;
     align-items: center;
@@ -218,7 +196,6 @@ const style = `
     margin-bottom: 28px;
   }
 
-  /* کارت */
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -233,8 +210,6 @@ const style = `
     position: relative;
     overflow: hidden;
   }
-
-  /* هێڵی سەرەوەی کارت */
   .kd-card::before {
     content: '';
     position: absolute;
@@ -243,7 +218,6 @@ const style = `
     background: linear-gradient(90deg, var(--amber), var(--amber-light), var(--amber));
   }
 
-  /* دیکۆری گۆشە */
   .kd-card-deco {
     position: absolute;
     bottom: 0; right: 0;
@@ -263,8 +237,6 @@ const style = `
     background: linear-gradient(180deg, rgba(184,134,27,0.03) 0%, transparent 100%);
     border-bottom: 1px solid var(--faint);
   }
-
-  .kd-word-block {}
 
   .kd-word {
     font-family: 'Playfair Display', serif;
@@ -307,7 +279,6 @@ const style = `
     align-self: flex-start;
   }
 
-  /* بەشەکان */
   .kd-section {
     padding: 24px 32px;
     border-bottom: 1px solid var(--faint);
@@ -325,12 +296,7 @@ const style = `
     gap: 10px;
     font-weight: 500;
   }
-  .kd-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--faint);
-  }
+  .kd-label::after { content: ''; flex: 1; height: 1px; background: var(--faint); }
 
   .kd-translation {
     font-family: 'Playfair Display', serif;
@@ -341,14 +307,12 @@ const style = `
     line-height: 1.25;
   }
 
-  /* نمونەکان */
   .kd-examples { display: flex; flex-direction: column; gap: 14px; }
 
   .kd-example {
     padding: 16px 20px;
     background: var(--paper);
     border: 1px solid var(--faint);
-    position: relative;
     display: flex;
     gap: 16px;
   }
@@ -364,33 +328,11 @@ const style = `
     opacity: 0.7;
   }
 
-  .kd-ex-body {}
+  .kd-ex-source { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 4px; }
+  .kd-ex-trans  { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.6; }
 
-  .kd-ex-source {
-    font-size: 15px;
-    color: var(--ink);
-    line-height: 1.7;
-    margin-bottom: 4px;
-    font-weight: 400;
-  }
+  .kd-loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; font-style: italic; }
 
-  .kd-ex-trans {
-    font-size: 13px;
-    color: var(--muted);
-    font-style: italic;
-    line-height: 1.6;
-  }
-
-  .kd-loading {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: var(--muted);
-    font-size: 14px;
-    font-style: italic;
-  }
-
-  /* بارکردنی کارت */
   .kd-card-skeleton {
     background: white;
     border: 1.5px solid var(--paper3);
@@ -413,10 +355,7 @@ const style = `
   .kd-skel-line { height: 12px; margin-bottom: 10px; }
   .kd-skel-big  { height: 36px; width: 50%; margin-bottom: 24px; }
 
-  /* سکشنی تاقیکردنەوە */
-  .kd-suggest-section {
-    margin-bottom: 40px;
-  }
+  .kd-suggest-section { margin-bottom: 40px; }
 
   .kd-section-head {
     display: flex;
@@ -429,19 +368,8 @@ const style = `
     color: var(--muted);
     font-weight: 500;
   }
-  .kd-section-head::before {
-    content: '';
-    width: 3px; height: 3px;
-    border-radius: 50%;
-    background: var(--amber);
-    flex-shrink: 0;
-  }
-  .kd-section-head::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--faint);
-  }
+  .kd-section-head::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
+  .kd-section-head::after  { content: ''; flex: 1; height: 1px; background: var(--faint); }
 
   .kd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
@@ -455,7 +383,6 @@ const style = `
     font-family: 'DM Sans', sans-serif;
     transition: all 0.18s;
     box-shadow: 0 1px 0 var(--paper3);
-    font-weight: 400;
   }
   .kd-chip:hover {
     border-color: var(--amber);
@@ -464,7 +391,6 @@ const style = `
     box-shadow: 0 2px 0 var(--amber-pale);
   }
 
-  /* footer */
   .kd-footer {
     text-align: center;
     padding-top: 40px;
@@ -476,7 +402,6 @@ const style = `
   }
   .kd-footer strong { color: var(--amber); font-weight: 400; }
 
-  /* ریسپانسیڤ */
   @media (max-width: 480px) {
     .kd-wrap { padding: 40px 16px 80px; }
     .kd-card-head, .kd-section { padding-left: 20px; padding-right: 20px; }
@@ -553,14 +478,11 @@ export default function KurdishDictionary() {
       <div className="kd-root">
         <div className="kd-grain" />
         <div className="kd-topbar" />
-
         <div className="kd-wrap">
-          {/* هێدەر */}
+
           <header className="kd-header">
             <div className="kd-eyebrow">فەرهەنگی زیرەک</div>
-            <h1 className="kd-title">
-              کوردی <em>&amp;</em> English
-            </h1>
+            <h1 className="kd-title">کوردی <em>&amp;</em> English</h1>
             <p className="kd-subtitle">وشەیەکت بنووسە — زمانەکەت ئۆتۆماتیکی دەناسرێت</p>
             <div className="kd-rule">
               <div className="kd-rule-inner">
@@ -571,32 +493,20 @@ export default function KurdishDictionary() {
             </div>
           </header>
 
-          {/* باکسی گەڕان */}
           <div className="kd-search-wrap">
             <div className="kd-input-row">
-              <input
-                ref={inputRef}
-                className="kd-input"
-                value={query}
+              <input ref={inputRef} className="kd-input" value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && search()}
-                placeholder="وشە بنووسە · Type a word…"
-              />
+                placeholder="وشە بنووسە · Type a word…" />
               <button className="kd-btn" onClick={search} disabled={loading || !query.trim()}>
                 {loading ? <span className="spinning">⊙</span> : "→"}
               </button>
             </div>
           </div>
 
-          {/* خەتا */}
-          {error && (
-            <div className="kd-error">
-              <span>⚠</span>
-              {error}
-            </div>
-          )}
+          {error && <div className="kd-error"><span>⚠</span>{error}</div>}
 
-          {/* بارکردن */}
           {loading && (
             <div className="kd-card-skeleton">
               <div className="kd-skel kd-skel-big" />
@@ -606,42 +516,33 @@ export default function KurdishDictionary() {
             </div>
           )}
 
-          {/* ئەنجام */}
           {result && !loading && (
             <div className="kd-card">
               <div className="kd-card-deco" />
-
               <div className="kd-card-head">
-                <div className="kd-word-block">
+                <div>
                   <div className="kd-word">{result.word}</div>
-                  <div className="kd-dir-label">
-                    {isKu ? "Kurdish Sorani → English" : "English → Kurdish Sorani"}
-                  </div>
+                  <div className="kd-dir-label">{isKu ? "Kurdish Sorani → English" : "English → Kurdish Sorani"}</div>
                 </div>
                 <div className="kd-tag">وشە · Word</div>
               </div>
 
-              {/* وەرگێڕان */}
               <div className="kd-section">
                 <div className="kd-label">وەرگێڕان · Translation</div>
                 <div className="kd-translation">{result.translation}</div>
               </div>
 
-              {/* نمونەکان */}
               <div className="kd-section">
                 <div className="kd-label">نمونەی ڕستەکان · Examples</div>
                 {examplesLoading && (
-                  <div className="kd-loading">
-                    <span className="spinning">⊙</span>
-                    نمونەکان دەگەیەنرێن…
-                  </div>
+                  <div className="kd-loading"><span className="spinning">⊙</span> نمونەکان دەگەیەنرێن…</div>
                 )}
                 {!examplesLoading && examples.length > 0 && (
                   <div className="kd-examples">
                     {examples.map((ex, i) => (
                       <div key={i} className="kd-example">
                         <div className="kd-ex-num">{i + 1}.</div>
-                        <div className="kd-ex-body">
+                        <div>
                           <div className="kd-ex-source">{isKu ? ex.ku : ex.en}</div>
                           <div className="kd-ex-trans">{isKu ? ex.en : ex.ku}</div>
                         </div>
@@ -650,15 +551,12 @@ export default function KurdishDictionary() {
                   </div>
                 )}
                 {!examplesLoading && examples.length === 0 && (
-                  <div style={{ color: "var(--muted)", fontSize: 13, fontStyle: "italic" }}>
-                    نمونەیەک نەدۆزرایەوە
-                  </div>
+                  <div style={{ color: "var(--muted)", fontSize: 13, fontStyle: "italic" }}>نمونەیەک نەدۆزرایەوە</div>
                 )}
               </div>
             </div>
           )}
 
-          {/* مێژووی گەڕان */}
           {history.length > 1 && (
             <div className="kd-suggest-section">
               <div className="kd-section-head">مێژووی گەڕان · Recent</div>
@@ -673,21 +571,17 @@ export default function KurdishDictionary() {
             </div>
           )}
 
-          {/* پێشنیار */}
           {!result && !loading && (
             <div className="kd-suggest-section">
               <div className="kd-section-head">تاقی بکەرەوە · Try these</div>
               <div className="kd-chips">
                 {["خۆشەویستی", "mountain", "ئازادی", "knowledge", "ئاو", "friendship"].map(w => (
-                  <button key={w} className="kd-chip" onClick={() => { setQuery(w); }}>
-                    {w}
-                  </button>
+                  <button key={w} className="kd-chip" onClick={() => setQuery(w)}>{w}</button>
                 ))}
               </div>
             </div>
           )}
 
-          {/* فووتەر */}
           <footer className="kd-footer">
             <strong>✦</strong> کوردی · English Dictionary <strong>✦</strong>
           </footer>
