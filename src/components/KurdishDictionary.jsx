@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 
 // ==================== URLی پشت ئێند (Google Apps Script) ====================
 // پاش بڵاوکردنەوەی Apps Script، ئەم URL-ەی خوارەوە بە URLەکەی خۆت بگۆڕە
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxS7BIMzrMGSWQhN7c9y8qg09fjGOolRI5FiX2jtryNyL4XSRWpfxoY7hg_YB697wSj/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZZLWgr8ozsheB5aKW46EopfUgoTuKUKrvwEFKUJZQL-xXqS0PT0Ju0NIOaNWVDkbq/exec";
 
 // ==================== ستایلەکان (هەمان ستایلی خۆت، تەنها کورتکراوە) ====================
 const style = `
