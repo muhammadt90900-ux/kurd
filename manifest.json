@@ -4,31 +4,33 @@
   "display": "fullscreen",
   "name": "KurdishDictionary",
   "orientation": "any",
-  "scope": "KurdishDictionary",
+  "scope": "/",
   "short_name": "فەرهەنگ",
-  "start_url": "https://KurdishDictionary.com",
+  "start_url": "https://muhammadt90900-ux.github.io/kurd/",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "data:image/svg+xml,&amp;lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&amp;gt;&amp;lt;text y='.9em' font-size='90'&amp;gt;📖&amp;lt;/text&amp;gt;&amp;lt;/svg&amp;gt;",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>",
       "type": "image/svg+xml",
-      "isSquare": false,
-      "isPng": false,
-      "isWebp": false,
-      "isJpg": false,
-      "width": 0,
-      "is512x512": false,
-      "is256x256": false,
-      "is192x192": false
+      "sizes": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
     }
   ],
   "id": "KurdishDictionary",
   "lang": "ku",
   "related_applications": [
     {
-      "platform": "",
-      "url": "https://muhammadt90900-ux.github.io/kurd/",
-      "id": ""
+      "platform": "webapp",
+      "url": "https://muhammadt90900-ux.github.io/kurd/"
     }
   ],
   "categories": [
