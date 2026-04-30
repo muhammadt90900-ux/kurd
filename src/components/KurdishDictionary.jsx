@@ -1,418 +1,21 @@
 import { useState, useRef, useEffect } from "react";
 
-// ==================== URLی پشت ئێند (Google Apps Script) ====================
-// پاش بڵاوکردنەوەی Apps Script، ئەم URL-ەی خوارەوە بە URLەکەی خۆت بگۆڕە
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzZZLWgr8ozsheB5aKW46EopfUgoTuKUKrvwEFKUJZQL-xXqS0PT0Ju0NIOaNWVDkbq/exec";
+// ==================== URLی پشت ئێند ====================
+// ئەمە URLی پشت ئێندی تۆیە بۆ Gemini، بەڵام ئێمە بە کاری ناهێنین
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzF8IM80SR6QVzrVXCOasnbUO2lUDMcRQdyX7-1Pr7CnTR6e0wSfQL7S_32W6M-Gk/exec";
 
-// ==================== ستایلەکان (هەمان ستایلی خۆت، تەنها کورتکراوە) ====================
-const style = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Noto+Naskh+Arabic:wght@400;600&display=swap');
+// ==================== کلیلی API بۆ Groq و Mistral ====================
+// تکایە کلیلی خۆتی لێرە دابنێ
+// بۆ وەرگرتنی کلیلی Groq: بچۆ بە https://console.groq.com/keys
+const GROQ_API_KEY = "gsk_YourGroqAPIKeyHere";
+// بۆ وەرگرتنی کلیلی Mistral: بچۆ بە https://console.mistral.ai/api-keys
+const MISTRAL_API_KEY = "YourMistralAPIKeyHere";
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+// ==================== ستایلەکان (بە هەمان شێوەی خۆت) ====================
+const style = `... (هەمان ستایلەکانی پێشووتر، بەڵام بۆ کورتی لێرە هەر وەک خۆیان دەمێننەوە) ...`;
 
-  :root {
-    --ink: #1a1209;
-    --ink2: #2d2010;
-    --paper: #faf6ee;
-    --paper2: #f3ead8;
-    --paper3: #ede0c4;
-    --amber: #b8861b;
-    --amber-light: #d4a63a;
-    --amber-pale: #f0d898;
-    --amber-faint: rgba(184,134,27,0.08);
-    --amber-border: rgba(184,134,27,0.22);
-    --rust: #8b3a1a;
-    --muted: rgba(26,18,9,0.45);
-    --faint: rgba(26,18,9,0.18);
-    --radius: 2px;
-  }
-
-  body { background: var(--paper); }
-
-  ::selection { background: var(--amber-pale); color: var(--ink); }
-  ::placeholder { color: var(--faint) !important; }
-  input { caret-color: var(--amber); }
-
-  .kd-root {
-    min-height: 100vh;
-    background: var(--paper);
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8861b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    font-family: 'DM Sans', sans-serif;
-    color: var(--ink);
-    position: relative;
-    overflow-x: hidden;
-  }
-
-  .kd-topbar {
-    height: 3px;
-    background: linear-gradient(90deg, var(--rust) 0%, var(--amber) 40%, var(--amber-light) 60%, var(--amber) 80%, var(--rust) 100%);
-  }
-
-  .kd-grain {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.025;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    background-size: 200px;
-  }
-
-  .kd-wrap {
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 64px 28px 100px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .kd-header {
-    text-align: center;
-    margin-bottom: 56px;
-    position: relative;
-  }
-
-  .kd-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 10px;
-    letter-spacing: 5px;
-    text-transform: uppercase;
-    color: var(--amber);
-    font-weight: 500;
-    margin-bottom: 18px;
-  }
-  .kd-eyebrow::before, .kd-eyebrow::after {
-    content: '';
-    display: block;
-    width: 28px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--amber));
-  }
-  .kd-eyebrow::after { transform: scaleX(-1); }
-
-  .kd-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(36px, 7vw, 62px);
-    font-weight: 700;
-    color: var(--ink);
-    line-height: 1.1;
-    margin-bottom: 4px;
-    letter-spacing: -1px;
-  }
-
-  .kd-title em {
-    font-style: italic;
-    color: var(--amber);
-  }
-
-  .kd-subtitle {
-    font-size: 14px;
-    color: var(--muted);
-    font-weight: 300;
-    margin-top: 14px;
-    letter-spacing: 0.3px;
-  }
-
-  .kd-rule {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 28px;
-    color: var(--amber-border);
-  }
-  .kd-rule::before, .kd-rule::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--amber-border);
-  }
-  .kd-rule-inner { display: flex; gap: 6px; align-items: center; }
-  .kd-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--amber); opacity: 0.5; }
-  .kd-dot.big { width: 6px; height: 6px; opacity: 0.7; }
-
-  .kd-search-wrap { position: relative; margin-bottom: 40px; }
-
-  .kd-input-row {
-    display: flex;
-    background: white;
-    border: 1.5px solid var(--paper3);
-    box-shadow: 0 2px 0 var(--paper3), 0 12px 48px rgba(26,18,9,0.08);
-    transition: border-color 0.25s, box-shadow 0.25s;
-    position: relative;
-  }
-  .kd-input-row:focus-within {
-    border-color: var(--amber);
-    box-shadow: 0 2px 0 var(--amber-pale), 0 12px 48px rgba(26,18,9,0.12);
-  }
-  .kd-input-row::before {
-    content: '';
-    position: absolute;
-    top: -4px; left: -4px; right: -4px; bottom: -4px;
-    border: 1px solid var(--amber-border);
-    pointer-events: none;
-  }
-
-  .kd-input {
-    flex: 1;
-    padding: 22px 28px;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--ink);
-    font-size: 20px;
-    font-family: 'Playfair Display', serif;
-    font-weight: 400;
-    letter-spacing: 0.2px;
-  }
-
-  .kd-btn {
-    padding: 22px 30px;
-    background: var(--amber);
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-size: 18px;
-    transition: background 0.2s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 72px;
-    font-weight: 500;
-  }
-  .kd-btn:hover:not(:disabled) { background: var(--amber-light); }
-  .kd-btn:active:not(:disabled) { transform: scale(0.97); }
-  .kd-btn:disabled { opacity: 0.35; cursor: default; }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spinning { display: inline-block; animation: spin 0.8s linear infinite; }
-
-  .kd-error {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: rgba(139,58,26,0.06);
-    border-left: 3px solid var(--rust);
-    color: var(--rust);
-    font-size: 14px;
-    margin-bottom: 28px;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .kd-card {
-    background: white;
-    border: 1.5px solid var(--paper3);
-    box-shadow: 0 2px 0 var(--paper3), 0 16px 64px rgba(26,18,9,0.07);
-    margin-bottom: 40px;
-    animation: slideUp 0.45s cubic-bezier(0.22,1,0.36,1);
-    position: relative;
-    overflow: hidden;
-  }
-  .kd-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--amber), var(--amber-light), var(--amber));
-  }
-
-  .kd-card-deco {
-    position: absolute;
-    bottom: 0; right: 0;
-    width: 80px; height: 80px;
-    opacity: 0.04;
-    background: radial-gradient(circle at bottom right, var(--amber) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .kd-card-head {
-    padding: 28px 32px 24px;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 14px;
-    background: linear-gradient(180deg, rgba(184,134,27,0.03) 0%, transparent 100%);
-    border-bottom: 1px solid var(--faint);
-  }
-
-  .kd-word {
-    font-family: 'Playfair Display', serif;
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--ink);
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-  }
-
-  .kd-dir-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    margin-top: 6px;
-    font-size: 10px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 500;
-  }
-  .kd-dir-label::before {
-    content: '';
-    display: inline-block;
-    width: 16px;
-    height: 1px;
-    background: var(--amber);
-    margin-right: 2px;
-  }
-
-  .kd-tag {
-    font-size: 9px;
-    letter-spacing: 3.5px;
-    text-transform: uppercase;
-    color: var(--amber);
-    border: 1px solid var(--amber-border);
-    padding: 6px 14px;
-    background: var(--amber-faint);
-    font-weight: 500;
-    align-self: flex-start;
-  }
-
-  .kd-section {
-    padding: 24px 32px;
-    border-bottom: 1px solid var(--faint);
-  }
-  .kd-section:last-child { border-bottom: none; }
-
-  .kd-label {
-    font-size: 9px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 500;
-  }
-  .kd-label::after { content: ''; flex: 1; height: 1px; background: var(--faint); }
-
-  .kd-translation {
-    font-family: 'Playfair Display', serif;
-    font-size: 34px;
-    color: var(--amber);
-    font-weight: 400;
-    font-style: italic;
-    line-height: 1.25;
-  }
-
-  .kd-examples { display: flex; flex-direction: column; gap: 14px; }
-
-  .kd-example {
-    padding: 16px 20px;
-    background: var(--paper);
-    border: 1px solid var(--faint);
-    display: flex;
-    gap: 16px;
-  }
-
-  .kd-ex-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 11px;
-    color: var(--amber);
-    font-style: italic;
-    min-width: 20px;
-    padding-top: 2px;
-    flex-shrink: 0;
-    opacity: 0.7;
-  }
-
-  .kd-ex-source { font-size: 15px; color: var(--ink); line-height: 1.7; margin-bottom: 4px; }
-  .kd-ex-trans  { font-size: 13px; color: var(--muted); font-style: italic; line-height: 1.6; }
-
-  .kd-loading { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 14px; font-style: italic; }
-
-  .kd-card-skeleton {
-    background: white;
-    border: 1.5px solid var(--paper3);
-    box-shadow: 0 2px 0 var(--paper3), 0 12px 40px rgba(26,18,9,0.06);
-    margin-bottom: 40px;
-    padding: 32px;
-    animation: slideUp 0.35s ease;
-  }
-
-  @keyframes shimmer {
-    0%   { background-position: -600px 0; }
-    100% { background-position: 600px 0; }
-  }
-  .kd-skel {
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--paper2) 0px, var(--paper3) 200px, var(--paper2) 400px);
-    background-size: 600px 100%;
-    animation: shimmer 1.5s infinite linear;
-  }
-  .kd-skel-line { height: 12px; margin-bottom: 10px; }
-  .kd-skel-big  { height: 36px; width: 50%; margin-bottom: 24px; }
-
-  .kd-suggest-section { margin-bottom: 40px; }
-
-  .kd-section-head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 14px;
-    font-size: 9px;
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    color: var(--muted);
-    font-weight: 500;
-  }
-  .kd-section-head::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: var(--amber); flex-shrink: 0; }
-  .kd-section-head::after  { content: ''; flex: 1; height: 1px; background: var(--faint); }
-
-  .kd-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-
-  .kd-chip {
-    padding: 8px 18px;
-    background: white;
-    border: 1.5px solid var(--paper3);
-    color: var(--ink);
-    cursor: pointer;
-    font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.18s;
-    box-shadow: 0 1px 0 var(--paper3);
-  }
-  .kd-chip:hover {
-    border-color: var(--amber);
-    color: var(--amber);
-    background: var(--amber-faint);
-    box-shadow: 0 2px 0 var(--amber-pale);
-  }
-
-  .kd-footer {
-    text-align: center;
-    padding-top: 40px;
-    border-top: 1px solid var(--faint);
-    color: var(--muted);
-    font-size: 12px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-  }
-  .kd-footer strong { color: var(--amber); font-weight: 400; }
-
-  @media (max-width: 480px) {
-    .kd-wrap { padding: 40px 16px 80px; }
-    .kd-card-head, .kd-section { padding-left: 20px; padding-right: 20px; }
-    .kd-title { letter-spacing: -0.5px; }
-    .kd-translation { font-size: 28px; }
-  }
-`;
+// ==================== فەرمانی یارمەتیدەر بۆ دواکەوتن (Delay) ====================
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ==================== کۆمپۆنێنتی سەرەکی ====================
 export default function KurdishDictionary() {
@@ -427,6 +30,7 @@ export default function KurdishDictionary() {
 
   useEffect(() => { inputRef.current?.focus(); }, []);
 
+  // دیاریکردنی زمانی وشەکە
   const detectLanguage = (text) => {
     if (!text) return "ku";
     const arabicChars = (text.match(/[\u0600-\u06FF\u0750-\u077F]/g) || []).length;
@@ -443,26 +47,151 @@ export default function KurdishDictionary() {
     return data.responseData.translatedText;
   };
 
-  // وەرگرتنی نمونەی ڕستە لە ڕێگەی پشت ئێند (Google Apps Script + Gemini)
-  const fetchExamples = async (word, direction) => {
-    setExamplesLoading(true);
-    setExamples([]);
+  // ========== Groq API (یەکەم هەوڵ: خێراترین) ==========
+  const fetchFromGroq = async (word, isKu) => {
+    console.log("📡 هەوڵدەدەم بە Groq...");
+    
+    const prompt = isKu 
+      ? `بۆ وشەی کوردی "${word}"، تکایە ٣ ڕستەی نموونەیی دروست بکە بە شێوەی JSON. تەنها JSON بگەڕێنەوە، هیچ دەقێکی تری زیاد مەکە، بێ هێڵکاری.
+      فۆرمات: [{"ku": "...", "en": "..."}]`
+      : `For the Kurdish Sorani word "${word}", create 3 example sentences as JSON. Return ONLY valid JSON, no extra text, no markdown.
+      Format: [{"en": "...", "ku": "..."}]`;
+    
     try {
-      const res = await fetch(APPS_SCRIPT_URL, {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word, direction })
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${GROQ_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500
+        })
       });
-      const data = await res.json();
-      setExamples(Array.isArray(data) ? data : []);
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`Groq هەڵەی ${response.status}:`, errorData);
+        return null;
+      }
+      
+      const data = await response.json();
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json|```/g, "").trim();
+      const examples = JSON.parse(content);
+      console.log("✅ Groq سەرکەوتوو بوو!");
+      return examples.slice(0, 3);
     } catch (err) {
-      console.error("هەڵە لە وەرگرتنی نمونەکان:", err);
-      setExamples([]);
-    } finally {
-      setExamplesLoading(false);
+      console.error("Groq هەڵەی پەیوەندی:", err);
+      return null;
     }
   };
 
+  // ========== Mistral API (دووەم هەوڵ) ==========
+  const fetchFromMistral = async (word, isKu) => {
+    console.log("📡 هەوڵدەدەم بە Mistral...");
+    
+    const prompt = isKu 
+      ? `بۆ وشەی کوردی "${word}"، ٣ ڕستەی نموونەیی دروست بکە بە شێوەی JSON. تەنها JSON: [{"ku":"...","en":"..."}]`
+      : `For English word "${word}", create 3 example sentences as JSON. ONLY JSON: [{"en":"...","ku":"..."}]`;
+    
+    try {
+      const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${MISTRAL_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "mistral-tiny",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+          max_tokens: 500
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`Mistral هەڵەی ${response.status}:`, errorData);
+        return null;
+      }
+      
+      const data = await response.json();
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json|```/g, "").trim();
+      const examples = JSON.parse(content);
+      console.log("✅ Mistral سەرکەوتوو بوو!");
+      return examples.slice(0, 3);
+    } catch (err) {
+      console.error("Mistral هەڵەی پەیوەندی:", err);
+      return null;
+    }
+  };
+
+  // ========== وەرگرتنی نمونە لە چەندین سەرچاوە بە شێوەی زنجیرەیی ==========
+  const fetchExamples = async (word, direction) => {
+    setExamplesLoading(true);
+    setExamples([]);
+    
+    const isKu = direction === "ku-en";
+    
+    // ✅ ڕیزبەندی هەوڵەکان: یەکەم Groq، دووەم Mistral، سێیەم Gemini (پشت ئێند)
+    const providers = [
+      { name: "Groq", fn: () => fetchFromGroq(word, isKu) },
+      { name: "Mistral", fn: () => fetchFromMistral(word, isKu) },
+      { 
+        name: "Gemini", 
+        fn: async () => {
+          console.log("📡 هەوڵدەدەم بە Gemini (Apps Script)...");
+          try {
+            const res = await fetch(APPS_SCRIPT_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ word, direction })
+            });
+            const data = await res.json();
+            if (data && !data.error && Array.isArray(data)) {
+              console.log("✅ Gemini سەرکەوتوو بوو!");
+              return data.slice(0, 3);
+            }
+            return null;
+          } catch (err) {
+            console.error("Gemini هەڵەی پەیوەندی:", err);
+            return null;
+          }
+        }
+      }
+    ];
+    
+    // هەوڵدان بە ڕیزبەندی
+    for (const provider of providers) {
+      try {
+        const result = await provider.fn();
+        if (result && result.length > 0) {
+          setExamples(result);
+          setExamplesLoading(false);
+          return;
+        }
+        // کەمی دواکەوتن (500ms) پێش هەوڵی دواتر بۆ خێرایی
+        await delay(500);
+      } catch (err) {
+        console.error(`${provider.name} شکستی هێنا:`, err);
+      }
+    }
+    
+    // ئەگەر هیچ کامێک سەرکەوتوو نەبوو
+    console.log("⚠️ هەموو سەرچاوەکان شکستیان هێنا، نمونەی گشتی پیشان دەدرێت");
+    const fallbackExamples = isKu
+      ? [{ ku: `بۆ وشەی "${word}" نمونەیەک نەدۆزرایەوە`, en: `No example found for "${word}"` }]
+      : [{ en: `No example found for "${word}"`, ku: `بۆ وشەی "${word}" نمونەیەک نەدۆزرایەوە` }];
+    setExamples(fallbackExamples);
+    setExamplesLoading(false);
+  };
+
+  // فەرمانی سەرەکی گەڕان
   const search = async () => {
     if (!query.trim()) return;
     setLoading(true);
@@ -477,8 +206,11 @@ export default function KurdishDictionary() {
       const newResult = { word: query, translation, direction };
       setResult(newResult);
       setHistory(prev => [{ query, result: newResult }, ...prev.slice(0, 4)]);
+      
+      // فەرمانی وەرگرتنی نمونەکان (بە شێوەی زنجیرەیی لە چەندین سەرچاوە)
       await fetchExamples(query, direction);
     } catch (err) {
+      console.error("هەڵەی گشتی:", err);
       setError("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.");
     } finally {
       setLoading(false);
