@@ -22,32 +22,33 @@ const translateWord = async (word, lang) => {
   return data.responseData.translatedText;
 };
 
-// FIX 2: Groq چاکەی کرد — response_format لابرا (llama3 لەگەڵ json_object نەیتانی)، parsing بەهێزتر
-const fetchExamplesFromGroq = async (word, isKu, apiKey) => {
-  if (!apiKey) throw new Error("No Groq API Key");
+// Groq API Key — بەشێوەی ثابت
+const GROQ_API_KEY = "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";
+
+const fetchExamplesFromGroq = async (word, isKu) => {
 
   const systemPrompt = isKu
-    ? `تۆ پسپۆڕی زمانی کوردی سۆرانی. تەنها JSON array بگەڕێنەوە، هیچ دەقێکی تر نەیخەرە پێش یان دوای JSON. فۆرمات: [{"ku":"ڕستەی کوردی","en":"English sentence"},{"ku":"ڕستەی کوردی","en":"English sentence"}]`
-    : `You are a Kurdish Sorani language expert. Return ONLY a JSON array with no extra text before or after. Format: [{"ku":"Kurdish Sorani sentence","en":"English sentence"},{"ku":"Kurdish Sorani sentence","en":"English sentence"}]`;
+    ? `You are a Kurdish Sorani language expert. The user gives you a Kurdish word. You must return ONLY a valid JSON array, nothing else — no explanation, no markdown, no extra text. Each item has "ku" (Kurdish sentence using the word) and "en" (English translation). Example output: [{"ku":"ئەو کتێبەکەی خوێند.","en":"He read that book."},{"ku":"ئەمە کتێبێکی باشە.","en":"This is a good book."}]`
+    : `You are a Kurdish Sorani language expert. The user gives you an English word. You must return ONLY a valid JSON array, nothing else — no explanation, no markdown, no extra text. Each item has "ku" (Kurdish Sorani sentence using a translation of the word) and "en" (English sentence using the word). Example output: [{"ku":"ئەو کتێبەکەی خوێند.","en":"He read that book."},{"ku":"ئەمە کتێبێکی باشە.","en":"This is a good book."}]`;
 
   const userPrompt = isKu
-    ? `بۆ وشەی کوردی "${word}"، ٢ ڕستەی نمونە بدەرێت.`
-    : `For the English word "${word}", give 2 example sentences using it.`;
+    ? `Kurdish word: "${word}" — give 2 example sentences as JSON array.`
+    : `English word: "${word}" — give 2 example sentences as JSON array.`;
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${apiKey}`,
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      model: "llama3-70b-8192",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ],
-      temperature: 0.3,
-      max_tokens: 400
+      temperature: 0.4,
+      max_tokens: 300
     })
   });
 
@@ -59,20 +60,20 @@ const fetchExamplesFromGroq = async (word, isKu, apiKey) => {
   const data = await res.json();
   const content = data.choices?.[0]?.message?.content || "";
 
-  // FIX 2b: Robust JSON parsing — سەرچاوەی هەموو کێشەکان
-  const cleaned = content
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
+  const cleaned = content.replace(/```json/gi,"").replace(/```/g,"").trim();
 
-  // Extract JSON array from anywhere in the response
-  const match = cleaned.match(/\[[\s\S]*\]/);
-  if (!match) throw new Error("No JSON array found in response");
+  // ئەگەر array بوو بەرێوەدەبرێت، ئەگەر object بوو ناوی array دەخوێنێتەوە
+  let parsed;
+  const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+  if (arrMatch) {
+    parsed = JSON.parse(arrMatch[0]);
+  } else {
+    const obj = JSON.parse(cleaned);
+    parsed = Array.isArray(obj) ? obj : Object.values(obj).find(v => Array.isArray(v)) || [];
+  }
 
-  const parsed = JSON.parse(match[0]);
-  if (!Array.isArray(parsed)) throw new Error("Response is not an array");
-
-  return parsed.slice(0, 2).filter(e => e.ku && e.en);
+  if (!Array.isArray(parsed)) throw new Error("Not an array");
+  return parsed.slice(0, 2).filter(e => e && e.ku && e.en);
 };
 
 const SUGGESTIONS = ["خۆشەویستی", "mountain", "ئازادی", "friendship", "ئاو", "wisdom"];
@@ -114,12 +115,6 @@ const SIDEBAR_THEMES_CSS = `
   .theme-btn.modern  { background: #0d0f14; color: #00e5c8; }
   .theme-btn.garden  { background: #d8f3dc; color: #1a3a2a; }
   .theme-btn.golden  { background: #f5efe2; color: #c8922a; }
-  .theme-btn.key-btn {
-    background: linear-gradient(135deg,#1e1e2f,#2a2a4a) !important;
-    color: gold !important;
-    border: 1px solid rgba(255,215,0,0.3) !important;
-    margin-top: 4px;
-  }
 
   .theme-btn.active {
     transform: scale(1.18);
@@ -138,85 +133,6 @@ const SIDEBAR_THEMES_CSS = `
       gap: 6px;
     }
     .theme-btn { width: 36px; height: 36px; font-size: 18px; }
-    .theme-btn.key-btn { margin-top: 0; margin-right: 4px; }
-  }
-
-  /* FIX 4: Key Modal — پاسووەردەکە نەیخوێنرێتەوە */
-  .key-modal-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(6px);
-    z-index: 10001;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .key-modal {
-    background: #fff;
-    padding: 1.8rem 1.5rem;
-    border-radius: 24px;
-    width: 300px;
-    text-align: center;
-    direction: rtl;
-    font-family: system-ui, sans-serif;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  }
-  .key-modal h4 {
-    margin: 0 0 0.4rem;
-    font-size: 1.1rem;
-    color: #1a1a2e;
-  }
-  .key-modal p {
-    font-size: 0.78rem;
-    color: #666;
-    margin: 0 0 1rem;
-    direction: rtl;
-  }
-  .key-modal-input-wrap {
-    position: relative;
-    margin: 0 0 1rem;
-  }
-  .key-modal input {
-    width: 100%;
-    padding: 9px 14px;
-    border: 1.5px solid #ddd;
-    border-radius: 40px;
-    direction: ltr;
-    text-align: left;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .key-modal input:focus { border-color: #2c7da0; }
-  .key-modal-status {
-    font-size: 0.72rem;
-    color: #2c7da0;
-    margin: -0.5rem 0 0.8rem;
-    min-height: 1.1em;
-  }
-  .key-buttons {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-  }
-  .key-buttons button {
-    padding: 7px 18px;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 0.88rem;
-    font-family: inherit;
-    transition: opacity 0.15s;
-  }
-  .key-btn-save { background: #2c7da0; color: white; }
-  .key-btn-clear { background: #e55; color: white; }
-  .key-btn-close { background: #eee; color: #444; }
-  .key-buttons button:hover { opacity: 0.85; }
-  .key-modal small {
-    display: block;
-    margin-top: 0.9rem;
-    font-size: 0.7rem;
-    color: #999;
-    direction: rtl;
   }
 `;
 
@@ -225,7 +141,7 @@ const classicCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap');
   .ck-root{--ink:#1a0a00;--parchment:#f4ead0;--parchment-dark:#e8d4a8;--burgundy:#6b1a1a;--gold:#b8860b;--gold-light:#d4a017;--rust:#8b3a1a;--cream:#fdf6e3;--shadow:rgba(26,10,0,0.18);}
   .ck-root{min-height:100vh;background:var(--parchment);background-image:repeating-linear-gradient(0deg,transparent,transparent 28px,rgba(107,26,26,0.05) 28px,rgba(107,26,26,0.05) 29px);font-family:'Amiri','Georgia',serif;direction:rtl;color:var(--ink);padding:0 1rem 4rem;}
-  .ck-page{max-width:680px;margin:0 auto;}
+  .ck-page{max-width:680px;margin:0 auto;padding-right:70px;}
   .ck-ornament{text-align:center;padding:1.5rem 0 0.4rem;color:var(--gold);font-size:1.3rem;letter-spacing:0.5rem;}
   .ck-header{text-align:center;padding:1rem 0 1.6rem;border-bottom:2px solid var(--gold);margin-bottom:1.8rem;}
   .ck-title-ku{font-family:'Amiri',serif;font-size:2.4rem;font-weight:700;color:var(--burgundy);text-shadow:1px 1px 0 rgba(184,134,11,0.3);}
@@ -270,7 +186,7 @@ const modernCSS = `
   .md-root{--bg:#0d0f14;--surface:#151820;--surface2:#1c2030;--border:#2a2f3e;--teal:#00e5c8;--teal-dim:rgba(0,229,200,0.12);--teal-glow:rgba(0,229,200,0.25);--text:#e8ecf4;--muted:#5a6078;--accent2:#ff6b6b;--white:#ffffff;}
   .md-root{min-height:100vh;background:var(--bg);background-image:radial-gradient(ellipse at 20% 0%,rgba(0,229,200,0.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 100%,rgba(0,150,180,0.05) 0%,transparent 60%);font-family:'IBM Plex Sans Arabic',sans-serif;direction:rtl;color:var(--text);padding:0 1rem 4rem;}
   .md-topstrip{height:3px;background:linear-gradient(90deg,transparent,var(--teal),transparent);}
-  .md-page{max-width:660px;margin:0 auto;}
+  .md-page{max-width:660px;margin:0 auto;padding-right:70px;}
   .md-header{padding:2.2rem 0 1.8rem;display:flex;flex-direction:column;gap:0.5rem;}
   .md-badge{display:inline-flex;align-items:center;gap:0.4rem;background:var(--teal-dim);border:1px solid rgba(0,229,200,0.3);color:var(--teal);font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;padding:0.22rem 0.65rem;border-radius:100px;width:fit-content;direction:ltr;}
   .md-badge::before{content:'●';font-size:0.45rem;animation:mdpulse 2s infinite;} @keyframes mdpulse{0%,100%{opacity:1}50%{opacity:0.3}}
@@ -317,7 +233,7 @@ const gardenCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Josefin+Sans:wght@300;400;600&display=swap');
   .gd-root{--forest:#1a3a2a;--green:#2d6a4f;--green-mid:#40916c;--mint:#74c69d;--pale:#d8f3dc;--cream:#fafaf5;--warm-white:#f5f0e8;--gold:#e9b941;--gold-dim:rgba(233,185,65,0.15);--shadow:rgba(26,58,42,0.15);--text:#1a2e1a;--muted:#5a7a60;}
   .gd-root{min-height:100vh;background:var(--cream);background-image:radial-gradient(circle at 10% 20%,rgba(116,198,157,0.12) 0%,transparent 50%),radial-gradient(circle at 90% 80%,rgba(45,106,79,0.08) 0%,transparent 50%);font-family:'Noto Naskh Arabic',serif;direction:rtl;color:var(--text);padding:0 1rem 4rem;}
-  .gd-page{max-width:660px;margin:0 auto;}
+  .gd-page{max-width:660px;margin:0 auto;padding-right:70px;}
   .gd-header{text-align:center;padding:2.2rem 0 1.5rem;}
   .gd-flower{font-size:1.9rem;line-height:1;margin-bottom:0.7rem;display:block;animation:gdsway 4s ease-in-out infinite;} @keyframes gdsway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
   .gd-title{font-family:'Noto Naskh Arabic',serif;font-size:2.4rem;font-weight:700;color:var(--forest);}
@@ -369,7 +285,7 @@ const goldenCSS = `
   .gl-root{--ink:#1a1008;--paper:#f5efe2;--paper2:#ede4d0;--gold:#c8922a;--gold2:#e8b84b;--rust:#8b3a1a;--teal:#1a5c5c;--teal2:#2a8a7a;--muted:#7a6a50;--border:#c8b898;--shadow:rgba(26,16,8,0.15);}
   .gl-root{min-height:100vh;background:var(--paper);background-image:radial-gradient(ellipse at 10% 0%,rgba(200,146,42,0.12) 0%,transparent 50%),radial-gradient(ellipse at 90% 100%,rgba(26,92,92,0.10) 0%,transparent 50%);font-family:'Tajawal',sans-serif;direction:rtl;color:var(--ink);padding:0 1rem 4rem;}
   .gl-root::after{content:'';position:fixed;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--rust),var(--gold),var(--teal2),var(--gold2));pointer-events:none;z-index:100;}
-  .gl-page{max-width:720px;margin:0 auto;}
+  .gl-page{max-width:720px;margin:0 auto;padding-right:70px;}
   .gl-header{text-align:center;padding:2.5rem 0 2rem;animation:glfd 0.7s ease both;} @keyframes glfd{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:translateY(0)}}
   .gl-emblem{width:58px;height:58px;margin:0 auto 18px;border:2px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--gold);background:linear-gradient(135deg,rgba(200,146,42,0.08),transparent);box-shadow:0 0 0 6px rgba(200,146,42,0.07);}
   .gl-eyebrow{font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:9px;}
@@ -379,7 +295,7 @@ const goldenCSS = `
   .gl-divider-line{flex:1;height:1px;background:var(--border);}
   .gl-divider-gem{width:7px;height:7px;background:var(--gold);transform:rotate(45deg);border-radius:1px;}
   .gl-subtitle{font-size:13px;color:var(--muted);font-weight:300;}
-  .gl-search{background:white;border:1.5px solid var(--border);border-radius:16px;padding:5px 5px 5px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px var(--shadow);margin-bottom:28px;transition:border-color 0.2s,box-shadow 0.2s;animation:glfd 0.7s 0.1s ease both;}
+  .gl-search{background:white;border:1.5px solid var(--border);border-radius:16px;padding:5px 5px 5px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 24px var(--shadow);margin-bottom:28px;margin-right:0;transition:border-color 0.2s,box-shadow 0.2s;animation:glfd 0.7s 0.1s ease both;}
   .gl-search:focus-within{border-color:var(--gold);box-shadow:0 4px 32px rgba(200,146,42,0.15);}
   .gl-input{flex:1;border:none;outline:none;font-family:'Tajawal',sans-serif;font-size:16px;color:var(--ink);background:transparent;direction:rtl;text-align:right;}
   .gl-input::placeholder{color:var(--muted);opacity:0.6;}
@@ -432,41 +348,12 @@ export default function KurdishDictionaryAllThemes() {
   const [exLoading, setExLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
-
-  // FIX: groqKey لە localStorage دێت، بەڵام localStorage لە artifact نییە — state بەتەنها
-  const [groqKey, setGroqKey] = useState(() => {
-    try { return localStorage.getItem("groq_api_key") || ""; }
-    catch { return ""; }
-  });
-  const [showKeyInput, setShowKeyInput] = useState(false);
-  const [tempKey, setTempKey] = useState("");
   const inputRef = useRef(null);
 
   useEffect(() => { inputRef.current?.focus(); }, [theme]);
 
-  // FIX 4: کاتێک modal دەکرێتەوە، input خاوەن نییە — نەیخوێنرێتەوە
-  const openKeyModal = () => {
-    setTempKey(""); // هەمووکات خاوەن دەستپێدەکات
-    setShowKeyInput(true);
-  };
-
-  const saveGroqKey = (key) => {
-    const trimmed = key.trim();
-    setGroqKey(trimmed);
-    try { localStorage.setItem("groq_api_key", trimmed); } catch {}
-    setShowKeyInput(false);
-  };
-
-  const clearGroqKey = () => {
-    setGroqKey("");
-    try { localStorage.removeItem("groq_api_key"); } catch {}
-    setShowKeyInput(false);
-  };
-
-  // FIX 5: fetchExamples — ئەگەر key نەبوو MyMemory وەرگێڕان دەدات بەڵام نمونە نییە
   const fetchExamples = async (word, isKu) => {
-    if (!groqKey) throw new Error("NO_KEY");
-    return await fetchExamplesFromGroq(word, isKu, groqKey);
+    return await fetchExamplesFromGroq(word, isKu);
   };
 
   const doSearch = async (word) => {
@@ -506,11 +393,6 @@ export default function KurdishDictionaryAllThemes() {
     if (exLoading) return (
       <div className={`${prefix}-loading`}><span className={`${prefix}-spinning`}>⊙</span> نمونەکان دەگەیەنرێن…</div>
     );
-    if (!groqKey && result) return (
-      <div className={`${prefix}-no-key`}>
-        🔑 بۆ نمونەی ڕستە، Groq API Key دابنێ — کلیک لە دوگمەی 🔑 بکە
-      </div>
-    );
     if (examples.length > 0) return (
       <div className={`${prefix}-examples`}>
         {examples.map((ex, i) => (
@@ -532,7 +414,7 @@ export default function KurdishDictionaryAllThemes() {
       <style>{SIDEBAR_THEMES_CSS}</style>
       <style>{CSS_MAP[theme]}</style>
 
-      {/* ───── FIX 3: Sidebar لە سەرەوە دەستەڕاست ───── */}
+      {/* ───── Sidebar ───── */}
       <div className="theme-sidebar">
         {THEMES.map(t => (
           <button
@@ -544,57 +426,7 @@ export default function KurdishDictionaryAllThemes() {
             {t.label}
           </button>
         ))}
-        <button
-          className="theme-btn key-btn"
-          onClick={openKeyModal}
-          title={groqKey ? "Groq Key دانراوە ✓" : "Groq API Key دابنێ"}
-        >
-          {groqKey ? "✓" : "🔑"}
-        </button>
       </div>
-
-      {/* ───── FIX 4: Key Modal — پاسووەردەکە نییەت لەسەر شاشە ───── */}
-      {showKeyInput && (
-        <div className="key-modal-backdrop" onClick={() => setShowKeyInput(false)}>
-          <div className="key-modal" onClick={e => e.stopPropagation()}>
-            <h4>🔑 Groq API Key</h4>
-            <p>
-              {groqKey
-                ? "کلیلت هەیە. دەتوانیت بگۆڕیتەوە یان بیسڕیتەوە."
-                : "بۆ نمونەی ڕستەکان، Groq API Key بنووسە."}
-            </p>
-            <input
-              type="password"
-              placeholder="gsk_xxxx…"
-              value={tempKey}
-              onChange={e => setTempKey(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && tempKey && saveGroqKey(tempKey)}
-              autoFocus
-            />
-            {groqKey && (
-              <div className="key-modal-status">
-                ✓ کلیلێکت هەیە ({groqKey.length} پیت)
-              </div>
-            )}
-            <div className="key-buttons">
-              {tempKey && (
-                <button className="key-btn-save" onClick={() => saveGroqKey(tempKey)}>
-                  پاشەکەوت
-                </button>
-              )}
-              {groqKey && (
-                <button className="key-btn-clear" onClick={clearGroqKey}>
-                  سڕینەوە
-                </button>
-              )}
-              <button className="key-btn-close" onClick={() => setShowKeyInput(false)}>
-                داخستن
-              </button>
-            </div>
-            <small>Keyەکە تەنها لە ناو browserـی تۆدا هەڵدەگیرێت، بۆ سێرڤەر ناگات.</small>
-          </div>
-        </div>
-      )}
 
       {/* ========== Theme 1: Classic ========== */}
       {theme === "classic" && (
