@@ -22,10 +22,9 @@ const translateWord = async (word, lang) => {
   return data.responseData.translatedText;
 };
 
-// Groq API Key — بەشێوەی ثابت
-const GROQ_API_KEY = "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";
-
-const fetchExamplesFromGroq = async (word, isKu) => {
+// FIX 2: Groq چاکەی کرد — response_format لابرا (llama3 لەگەڵ json_object نەیتانی)، parsing بەهێزتر
+const fetchExamplesFromGroq = async (word, isKu, apiKey) => {
+  if (!apiKey) throw new Error("No Groq API Key");
 
   const systemPrompt = isKu
     ? `تۆ پسپۆڕی زمانی کوردی سۆرانی. تەنها JSON array بگەڕێنەوە، هیچ دەقێکی تر نەیخەرە پێش یان دوای JSON. فۆرمات: [{"ku":"ڕستەی کوردی","en":"English sentence"},{"ku":"ڕستەی کوردی","en":"English sentence"}]`
@@ -38,7 +37,7 @@ const fetchExamplesFromGroq = async (word, isKu) => {
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
+      "Authorization": `Bearer ${apiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -115,6 +114,12 @@ const SIDEBAR_THEMES_CSS = `
   .theme-btn.modern  { background: #0d0f14; color: #00e5c8; }
   .theme-btn.garden  { background: #d8f3dc; color: #1a3a2a; }
   .theme-btn.golden  { background: #f5efe2; color: #c8922a; }
+  .theme-btn.key-btn {
+    background: linear-gradient(135deg,#1e1e2f,#2a2a4a) !important;
+    color: gold !important;
+    border: 1px solid rgba(255,215,0,0.3) !important;
+    margin-top: 4px;
+  }
 
   .theme-btn.active {
     transform: scale(1.18);
@@ -133,6 +138,85 @@ const SIDEBAR_THEMES_CSS = `
       gap: 6px;
     }
     .theme-btn { width: 36px; height: 36px; font-size: 18px; }
+    .theme-btn.key-btn { margin-top: 0; margin-right: 4px; }
+  }
+
+  /* FIX 4: Key Modal — پاسووەردەکە نەیخوێنرێتەوە */
+  .key-modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    z-index: 10001;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .key-modal {
+    background: #fff;
+    padding: 1.8rem 1.5rem;
+    border-radius: 24px;
+    width: 300px;
+    text-align: center;
+    direction: rtl;
+    font-family: system-ui, sans-serif;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .key-modal h4 {
+    margin: 0 0 0.4rem;
+    font-size: 1.1rem;
+    color: #1a1a2e;
+  }
+  .key-modal p {
+    font-size: 0.78rem;
+    color: #666;
+    margin: 0 0 1rem;
+    direction: rtl;
+  }
+  .key-modal-input-wrap {
+    position: relative;
+    margin: 0 0 1rem;
+  }
+  .key-modal input {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 40px;
+    direction: ltr;
+    text-align: left;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .key-modal input:focus { border-color: #2c7da0; }
+  .key-modal-status {
+    font-size: 0.72rem;
+    color: #2c7da0;
+    margin: -0.5rem 0 0.8rem;
+    min-height: 1.1em;
+  }
+  .key-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .key-buttons button {
+    padding: 7px 18px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-family: inherit;
+    transition: opacity 0.15s;
+  }
+  .key-btn-save { background: #2c7da0; color: white; }
+  .key-btn-clear { background: #e55; color: white; }
+  .key-btn-close { background: #eee; color: #444; }
+  .key-buttons button:hover { opacity: 0.85; }
+  .key-modal small {
+    display: block;
+    margin-top: 0.9rem;
+    font-size: 0.7rem;
+    color: #999;
+    direction: rtl;
   }
 `;
 
@@ -348,12 +432,41 @@ export default function KurdishDictionaryAllThemes() {
   const [exLoading, setExLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+
+  // FIX: groqKey لە localStorage دێت، بەڵام localStorage لە artifact نییە — state بەتەنها
+  const [groqKey, setGroqKey] = useState(() => {
+    try { return localStorage.getItem("groq_api_key") || ""; }
+    catch { return ""; }
+  });
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [tempKey, setTempKey] = useState("");
   const inputRef = useRef(null);
 
   useEffect(() => { inputRef.current?.focus(); }, [theme]);
 
+  // FIX 4: کاتێک modal دەکرێتەوە، input خاوەن نییە — نەیخوێنرێتەوە
+  const openKeyModal = () => {
+    setTempKey(""); // هەمووکات خاوەن دەستپێدەکات
+    setShowKeyInput(true);
+  };
+
+  const saveGroqKey = (key) => {
+    const trimmed = key.trim();
+    setGroqKey(trimmed);
+    try { localStorage.setItem("groq_api_key", trimmed); } catch {}
+    setShowKeyInput(false);
+  };
+
+  const clearGroqKey = () => {
+    setGroqKey("");
+    try { localStorage.removeItem("groq_api_key"); } catch {}
+    setShowKeyInput(false);
+  };
+
+  // FIX 5: fetchExamples — ئەگەر key نەبوو MyMemory وەرگێڕان دەدات بەڵام نمونە نییە
   const fetchExamples = async (word, isKu) => {
-    return await fetchExamplesFromGroq(word, isKu);
+    if (!groqKey) throw new Error("NO_KEY");
+    return await fetchExamplesFromGroq(word, isKu, groqKey);
   };
 
   const doSearch = async (word) => {
@@ -393,6 +506,11 @@ export default function KurdishDictionaryAllThemes() {
     if (exLoading) return (
       <div className={`${prefix}-loading`}><span className={`${prefix}-spinning`}>⊙</span> نمونەکان دەگەیەنرێن…</div>
     );
+    if (!groqKey && result) return (
+      <div className={`${prefix}-no-key`}>
+        🔑 بۆ نمونەی ڕستە، Groq API Key دابنێ — کلیک لە دوگمەی 🔑 بکە
+      </div>
+    );
     if (examples.length > 0) return (
       <div className={`${prefix}-examples`}>
         {examples.map((ex, i) => (
@@ -414,7 +532,7 @@ export default function KurdishDictionaryAllThemes() {
       <style>{SIDEBAR_THEMES_CSS}</style>
       <style>{CSS_MAP[theme]}</style>
 
-      {/* ───── Sidebar ───── */}
+      {/* ───── FIX 3: Sidebar لە سەرەوە دەستەڕاست ───── */}
       <div className="theme-sidebar">
         {THEMES.map(t => (
           <button
@@ -426,7 +544,57 @@ export default function KurdishDictionaryAllThemes() {
             {t.label}
           </button>
         ))}
+        <button
+          className="theme-btn key-btn"
+          onClick={openKeyModal}
+          title={groqKey ? "Groq Key دانراوە ✓" : "Groq API Key دابنێ"}
+        >
+          {groqKey ? "✓" : "🔑"}
+        </button>
       </div>
+
+      {/* ───── FIX 4: Key Modal — پاسووەردەکە نییەت لەسەر شاشە ───── */}
+      {showKeyInput && (
+        <div className="key-modal-backdrop" onClick={() => setShowKeyInput(false)}>
+          <div className="key-modal" onClick={e => e.stopPropagation()}>
+            <h4>🔑 Groq API Key</h4>
+            <p>
+              {groqKey
+                ? "کلیلت هەیە. دەتوانیت بگۆڕیتەوە یان بیسڕیتەوە."
+                : "بۆ نمونەی ڕستەکان، Groq API Key بنووسە."}
+            </p>
+            <input
+              type="password"
+              placeholder="gsk_xxxx…"
+              value={tempKey}
+              onChange={e => setTempKey(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && tempKey && saveGroqKey(tempKey)}
+              autoFocus
+            />
+            {groqKey && (
+              <div className="key-modal-status">
+                ✓ کلیلێکت هەیە ({groqKey.length} پیت)
+              </div>
+            )}
+            <div className="key-buttons">
+              {tempKey && (
+                <button className="key-btn-save" onClick={() => saveGroqKey(tempKey)}>
+                  پاشەکەوت
+                </button>
+              )}
+              {groqKey && (
+                <button className="key-btn-clear" onClick={clearGroqKey}>
+                  سڕینەوە
+                </button>
+              )}
+              <button className="key-btn-close" onClick={() => setShowKeyInput(false)}>
+                داخستن
+              </button>
+            </div>
+            <small>Keyەکە تەنها لە ناو browserـی تۆدا هەڵدەگیرێت، بۆ سێرڤەر ناگات.</small>
+          </div>
+        </div>
+      )}
 
       {/* ========== Theme 1: Classic ========== */}
       {theme === "classic" && (
