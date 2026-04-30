@@ -1,0 +1,39 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "fullscreen",
+  "name": "KurdishDictionary",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "فەرهەنگ",
+  "start_url": "https://muhammadt90900-ux.github.io/kurd/",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "id": "KurdishDictionary",
+  "lang": "ku",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://muhammadt90900-ux.github.io/kurd/"
+    }
+  ],
+  "categories": [
+    "education"
+  ]
+}
