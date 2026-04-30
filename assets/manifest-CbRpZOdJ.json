@@ -6,11 +6,11 @@
   "orientation": "any",
   "scope": "KurdishDictionary",
   "short_name": "فەرهەنگ",
-  "start_url": "https://muhammadt90900-ux.github.io/kurd/",
+  "start_url": "https://KurdishDictionary.com",
   "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;📖&lt;/text&gt;&lt;/svg&gt;",
+      "src": "data:image/svg+xml,&amp;lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&amp;gt;&amp;lt;text y='.9em' font-size='90'&amp;gt;📖&amp;lt;/text&amp;gt;&amp;lt;/svg&amp;gt;",
       "type": "image/svg+xml",
       "isSquare": false,
       "isPng": false,
