@@ -435,22 +435,35 @@ export default function KurdishDictionary() {
     try {
       const isKu = direction === "ku-en";
       const prompt = isKu
-        ? `Give 3 short example sentences using Kurdish Sorani word "${word}". JSON only:\n[{"ku":"...","en":"..."},{"ku":"...","en":"..."},{"ku":"...","en":"..."}]`
-        : `Give 3 short example sentences using English word "${word}". JSON only:\n[{"en":"...","ku":"..."},{"en":"...","ku":"..."},{"en":"...","ku":"..."}]`;
+        ? `Give 3 short example sentences using the Kurdish Sorani word "${word}". Reply with JSON only, no explanation, no markdown:\n[{"ku":"...","en":"..."},{"ku":"...","en":"..."},{"ku":"...","en":"..."}]`
+        : `Give 3 short example sentences using the English word "${word}" and translate each to Kurdish Sorani. Reply with JSON only, no explanation, no markdown:\n[{"en":"...","ku":"..."},{"en":"...","ku":"..."},{"en":"...","ku":"..."}]`;
+
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // API key is automatically injected by claude.ai — no key needed here
+        },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
           max_tokens: 1000,
           messages: [{ role: "user", content: prompt }],
         }),
       });
+
+      if (!res.ok) throw new Error("API error: " + res.status);
+
       const data = await res.json();
       const text = data.content?.map(i => i.text || "").join("") || "";
-      setExamples(JSON.parse(text.replace(/```json|```/g, "").trim()));
-    } catch { setExamples([]); }
-    finally { setExamplesLoading(false); }
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+      setExamples(parsed);
+    } catch (e) {
+      console.error("Examples error:", e);
+      setExamples([]);
+    } finally {
+      setExamplesLoading(false);
+    }
   };
 
   const search = async () => {
@@ -459,15 +472,20 @@ export default function KurdishDictionary() {
     try {
       const lang = detectLanguage(query);
       const direction = lang === "ku" ? "ku-en" : "en-ku";
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${lang === "ku" ? "ckb|en" : "en|ckb"}&mt=1`);
+      const res = await fetch(
+        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${lang === "ku" ? "ckb|en" : "en|ckb"}&mt=1`
+      );
       const data = await res.json();
       if (data.responseStatus !== 200) throw new Error();
       const r = { word: query, translation: data.responseData.translatedText, direction };
       setResult(r);
       setHistory(prev => [{ query, result: r }, ...prev.slice(0, 4)]);
       fetchExamples(query, direction);
-    } catch { setError("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە."); }
-    finally { setLoading(false); }
+    } catch {
+      setError("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isKu = result?.direction === "ku-en";
@@ -495,10 +513,14 @@ export default function KurdishDictionary() {
 
           <div className="kd-search-wrap">
             <div className="kd-input-row">
-              <input ref={inputRef} className="kd-input" value={query}
+              <input
+                ref={inputRef}
+                className="kd-input"
+                value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && search()}
-                placeholder="وشە بنووسە · Type a word…" />
+                placeholder="وشە بنووسە · Type a word…"
+              />
               <button className="kd-btn" onClick={search} disabled={loading || !query.trim()}>
                 {loading ? <span className="spinning">⊙</span> : "→"}
               </button>
@@ -522,7 +544,9 @@ export default function KurdishDictionary() {
               <div className="kd-card-head">
                 <div>
                   <div className="kd-word">{result.word}</div>
-                  <div className="kd-dir-label">{isKu ? "Kurdish Sorani → English" : "English → Kurdish Sorani"}</div>
+                  <div className="kd-dir-label">
+                    {isKu ? "Kurdish Sorani → English" : "English → Kurdish Sorani"}
+                  </div>
                 </div>
                 <div className="kd-tag">وشە · Word</div>
               </div>
@@ -535,7 +559,9 @@ export default function KurdishDictionary() {
               <div className="kd-section">
                 <div className="kd-label">نمونەی ڕستەکان · Examples</div>
                 {examplesLoading && (
-                  <div className="kd-loading"><span className="spinning">⊙</span> نمونەکان دەگەیەنرێن…</div>
+                  <div className="kd-loading">
+                    <span className="spinning">⊙</span> نمونەکان دەگەیەنرێن…
+                  </div>
                 )}
                 {!examplesLoading && examples.length > 0 && (
                   <div className="kd-examples">
@@ -551,7 +577,9 @@ export default function KurdishDictionary() {
                   </div>
                 )}
                 {!examplesLoading && examples.length === 0 && (
-                  <div style={{ color: "var(--muted)", fontSize: 13, fontStyle: "italic" }}>نمونەیەک نەدۆزرایەوە</div>
+                  <div style={{ color: "var(--muted)", fontSize: 13, fontStyle: "italic" }}>
+                    نمونەیەک نەدۆزرایەوە
+                  </div>
                 )}
               </div>
             </div>
@@ -562,8 +590,15 @@ export default function KurdishDictionary() {
               <div className="kd-section-head">مێژووی گەڕان · Recent</div>
               <div className="kd-chips">
                 {history.slice(1).map((h, i) => (
-                  <button key={i} className="kd-chip"
-                    onClick={() => { setQuery(h.query); setResult(h.result); fetchExamples(h.query, h.result.direction); }}>
+                  <button
+                    key={i}
+                    className="kd-chip"
+                    onClick={() => {
+                      setQuery(h.query);
+                      setResult(h.result);
+                      fetchExamples(h.query, h.result.direction);
+                    }}
+                  >
                     {h.query}
                   </button>
                 ))}
@@ -576,7 +611,9 @@ export default function KurdishDictionary() {
               <div className="kd-section-head">تاقی بکەرەوە · Try these</div>
               <div className="kd-chips">
                 {["خۆشەویستی", "mountain", "ئازادی", "knowledge", "ئاو", "friendship"].map(w => (
-                  <button key={w} className="kd-chip" onClick={() => setQuery(w)}>{w}</button>
+                  <button key={w} className="kd-chip" onClick={() => { setQuery(w); }}>
+                    {w}
+                  </button>
                 ))}
               </div>
             </div>
