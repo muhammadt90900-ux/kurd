@@ -7,7 +7,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzzF8IM80SR6QVz
 // ==================== کلیلی API بۆ Groq و Mistral ====================
 // تکایە کلیلی خۆتی لێرە دابنێ
 // بۆ وەرگرتنی کلیلی Groq: بچۆ بە https://console.groq.com/keys
-const GROQ_API_KEY = "gsk_YourGroqAPIKeyHere";
+const GROQ_API_KEY = "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";
 // بۆ وەرگرتنی کلیلی Mistral: بچۆ بە https://console.mistral.ai/api-keys
 const MISTRAL_API_KEY = "YourMistralAPIKeyHere";
 
