@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 
+// ==================== URLی پشت ئێند (Google Apps Script) ====================
+// پاش بڵاوکردنەوەی Apps Script، ئەم URL-ەی خوارەوە بە URLەکەی خۆت بگۆڕە
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+
+// ==================== ستایلەکان (هەمان ستایلی خۆت، تەنها کورتکراوە) ====================
 const style = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&family=Noto+Naskh+Arabic:wght@400;600&display=swap');
 
@@ -31,8 +36,7 @@ const style = `
   .kd-root {
     min-height: 100vh;
     background: var(--paper);
-    background-image:
-      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8861b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23b8861b' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     font-family: 'DM Sans', sans-serif;
     color: var(--ink);
     position: relative;
@@ -410,6 +414,7 @@ const style = `
   }
 `;
 
+// ==================== کۆمپۆنێنتی سەرەکی ====================
 export default function KurdishDictionary() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState(null);
@@ -429,37 +434,29 @@ export default function KurdishDictionary() {
     return total === 0 ? "ku" : arabicChars / total > 0.3 ? "ku" : "en";
   };
 
+  // وەرگێڕان بە MyMemory API (بێ بەرامبەر)
+  const translateWord = async (word, sourceLang) => {
+    const pair = sourceLang === "ku" ? "ckb|en" : "en|ckb";
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(word)}&langpair=${pair}&mt=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.responseData.translatedText;
+  };
+
+  // وەرگرتنی نمونەی ڕستە لە ڕێگەی پشت ئێند (Google Apps Script + Gemini)
   const fetchExamples = async (word, direction) => {
     setExamplesLoading(true);
     setExamples([]);
     try {
-      const isKu = direction === "ku-en";
-      const prompt = isKu
-        ? `Give 3 short example sentences using the Kurdish Sorani word "${word}". Reply with JSON only, no explanation, no markdown:\n[{"ku":"...","en":"..."},{"ku":"...","en":"..."},{"ku":"...","en":"..."}]`
-        : `Give 3 short example sentences using the English word "${word}" and translate each to Kurdish Sorani. Reply with JSON only, no explanation, no markdown:\n[{"en":"...","ku":"..."},{"en":"...","ku":"..."},{"en":"...","ku":"..."}]`;
-
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch(APPS_SCRIPT_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // API key is automatically injected by claude.ai — no key needed here
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: prompt }],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word, direction })
       });
-
-      if (!res.ok) throw new Error("API error: " + res.status);
-
       const data = await res.json();
-      const text = data.content?.map(i => i.text || "").join("") || "";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      setExamples(parsed);
-    } catch (e) {
-      console.error("Examples error:", e);
+      setExamples(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("هەڵە لە وەرگرتنی نمونەکان:", err);
       setExamples([]);
     } finally {
       setExamplesLoading(false);
@@ -468,20 +465,20 @@ export default function KurdishDictionary() {
 
   const search = async () => {
     if (!query.trim()) return;
-    setLoading(true); setError(null); setResult(null); setExamples([]);
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    setExamples([]);
+
     try {
-      const lang = detectLanguage(query);
-      const direction = lang === "ku" ? "ku-en" : "en-ku";
-      const res = await fetch(
-        `https://api.mymemory.translated.net/get?q=${encodeURIComponent(query)}&langpair=${lang === "ku" ? "ckb|en" : "en|ckb"}&mt=1`
-      );
-      const data = await res.json();
-      if (data.responseStatus !== 200) throw new Error();
-      const r = { word: query, translation: data.responseData.translatedText, direction };
-      setResult(r);
-      setHistory(prev => [{ query, result: r }, ...prev.slice(0, 4)]);
-      fetchExamples(query, direction);
-    } catch {
+      const sourceLang = detectLanguage(query);
+      const direction = sourceLang === "ku" ? "ku-en" : "en-ku";
+      const translation = await translateWord(query, sourceLang);
+      const newResult = { word: query, translation, direction };
+      setResult(newResult);
+      setHistory(prev => [{ query, result: newResult }, ...prev.slice(0, 4)]);
+      await fetchExamples(query, direction);
+    } catch (err) {
       setError("کێشەیەک ڕوویدا. تکایە دووبارە هەوڵ بدەرەوە.");
     } finally {
       setLoading(false);
@@ -611,7 +608,7 @@ export default function KurdishDictionary() {
               <div className="kd-section-head">تاقی بکەرەوە · Try these</div>
               <div className="kd-chips">
                 {["خۆشەویستی", "mountain", "ئازادی", "knowledge", "ئاو", "friendship"].map(w => (
-                  <button key={w} className="kd-chip" onClick={() => { setQuery(w); }}>
+                  <button key={w} className="kd-chip" onClick={() => setQuery(w)}>
                     {w}
                   </button>
                 ))}
